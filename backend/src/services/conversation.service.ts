@@ -1,6 +1,6 @@
 import { prisma } from '../config';
 import { AppError } from '../utils/AppError';
-import { Channel, ConversationStatus, MessageRole } from '@prisma/client';
+import type { Channel, ConversationStatus, MessageRole } from '../types';
 
 export class ConversationService {
   async findOrCreateForLead(leadId: number, channel: Channel) {
@@ -8,13 +8,13 @@ export class ConversationService {
       where: {
         leadId,
         channel,
-        status: ConversationStatus.active,
+        status: 'active',
       },
     });
 
     if (!conversation) {
       conversation = await prisma.conversation.create({
-        data: { leadId, channel, status: ConversationStatus.active },
+        data: { leadId, channel, status: 'active' },
       });
     }
 
@@ -63,7 +63,7 @@ export class ConversationService {
   async closeConversation(conversationId: number) {
     return prisma.conversation.update({
       where: { id: conversationId },
-      data: { status: ConversationStatus.closed },
+      data: { status: 'closed' },
     });
   }
 
@@ -79,7 +79,7 @@ export class ConversationService {
 
   async getActiveConversations() {
     return prisma.conversation.findMany({
-      where: { status: ConversationStatus.active },
+      where: { status: 'active' },
       include: {
         lead: { select: { id: true, name: true, phone: true, channel: true } },
         _count: { select: { messages: true } },

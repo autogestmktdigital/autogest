@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { prisma } from '../config';
-import { FollowUpStatus, FollowUpType, LeadStatus } from '@prisma/client';
+import type { FollowUpStatus, FollowUpType, LeadStatus } from '../types';
 import { openaiService } from './openai.service';
 
 export class FollowUpService {
@@ -10,8 +10,8 @@ export class FollowUpService {
     return prisma.followUp.create({
       data: {
         leadId,
-        type: FollowUpType.welcome_24h,
-        status: FollowUpStatus.scheduled,
+        type: 'welcome_24h',
+        status: 'scheduled',
         scheduledFor,
       },
     });
@@ -23,8 +23,8 @@ export class FollowUpService {
     return prisma.followUp.create({
       data: {
         leadId,
-        type: FollowUpType.check_interest,
-        status: FollowUpStatus.scheduled,
+        type: 'check_interest',
+        status: 'scheduled',
         scheduledFor,
       },
     });
@@ -33,7 +33,7 @@ export class FollowUpService {
   async processPendingFollowUps() {
     const pendingFollowUps = await prisma.followUp.findMany({
       where: {
-        status: FollowUpStatus.scheduled,
+        status: 'scheduled',
         scheduledFor: { lte: new Date() },
       },
       include: {
@@ -54,10 +54,10 @@ export class FollowUpService {
 
     for (const followUp of pendingFollowUps) {
       try {
-        if (followUp.lead.status === LeadStatus.converted || followUp.lead.status === LeadStatus.lost) {
+        if (followUp.lead.status === 'converted' || followUp.lead.status === 'lost') {
           await prisma.followUp.update({
             where: { id: followUp.id },
-            data: { status: FollowUpStatus.cancelled },
+            data: { status: 'cancelled' },
           });
           continue;
         }
@@ -74,7 +74,7 @@ export class FollowUpService {
         await prisma.followUp.update({
           where: { id: followUp.id },
           data: {
-            status: FollowUpStatus.sent,
+            status: 'sent',
             sentAt: new Date(),
             messageContent: message,
           },
@@ -85,7 +85,7 @@ export class FollowUpService {
         console.error(`Erro no follow-up ${followUp.id}:`, error);
         await prisma.followUp.update({
           where: { id: followUp.id },
-          data: { status: FollowUpStatus.failed },
+          data: { status: 'failed' },
         });
         results.push({ id: followUp.id, leadId: followUp.leadId, status: 'failed' });
       }
@@ -104,7 +104,7 @@ export class FollowUpService {
   async cancelFollowUp(id: number) {
     return prisma.followUp.update({
       where: { id },
-      data: { status: FollowUpStatus.cancelled },
+      data: { status: 'cancelled' },
     });
   }
 

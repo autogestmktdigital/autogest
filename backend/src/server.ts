@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
 import { env } from './config';
 import { errorHandler } from './middleware';
 import { followUpService } from './services/followup.service';
@@ -19,6 +19,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static uploads
 app.use('/uploads', express.static(path.resolve(env.UPLOAD_DIR)));
 
+// Health check
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'autorevenda-api' });
+});
+
 // API routes
 app.use('/api', routes);
 
@@ -29,6 +34,7 @@ app.use(errorHandler);
 app.listen(env.PORT, () => {
   console.log(`[SERVER] Servidor rodando na porta ${env.PORT}`);
   console.log(`[SERVER] Ambiente: ${env.NODE_ENV}`);
+  console.log(`[SERVER] API: http://localhost:${env.PORT}/api`);
 
   // Start follow-up cron jobs
   followUpService.startCronJobs();

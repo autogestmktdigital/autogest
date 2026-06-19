@@ -1,6 +1,7 @@
 import { prisma } from '../config';
 import { AppError } from '../utils/AppError';
-import { Prisma, VehicleStatus, FuelType, TransmissionType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import type { VehicleStatus, FuelType, TransmissionType } from '../types';
 
 export interface VehicleFilters {
   brand?: string;
@@ -32,7 +33,7 @@ export class VehicleService {
     if (filters.status) {
       where.status = filters.status;
     } else {
-      where.status = VehicleStatus.available;
+      where.status = 'available';
     }
 
     if (filters.yearMin || filters.yearMax) {
@@ -106,7 +107,7 @@ export class VehicleService {
   async searchForBot(query: string, maxResults: number = 5) {
     const vehicles = await prisma.vehicle.findMany({
       where: {
-        status: VehicleStatus.available,
+        status: 'available',
         OR: [
           { brand: { contains: query } },
           { model: { contains: query } },

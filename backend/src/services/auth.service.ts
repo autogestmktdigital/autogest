@@ -20,7 +20,7 @@ export class AuthService {
     const payload: AuthPayload = {
       userId: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role as 'admin' | 'seller',
     };
 
     const token = jwt.sign(payload, env.JWT_SECRET, {

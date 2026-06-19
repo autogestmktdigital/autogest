@@ -1,6 +1,7 @@
 import { prisma } from '../config';
 import { AppError } from '../utils/AppError';
-import { Channel, LeadStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import type { Channel, LeadStatus } from '../types';
 
 export interface LeadFilters {
   status?: LeadStatus;
@@ -94,7 +95,7 @@ export class LeadService {
           channelUserId: data.channelUserId,
           name: data.name,
           phone: data.phone,
-          status: LeadStatus.new_lead,
+          status: 'new_lead',
         },
       });
     }
@@ -114,7 +115,7 @@ export class LeadService {
   async assignToSeller(id: number, sellerId: number) {
     return this.update(id, {
       assignedTo: { connect: { id: sellerId } },
-      status: LeadStatus.contacted,
+      status: 'contacted' as LeadStatus,
     });
   }
 
