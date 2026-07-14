@@ -9,7 +9,8 @@ RUN npm ci
 COPY backend/prisma ./prisma/
 RUN npx prisma generate
 
-COPY backend/ ./
+COPY backend/src ./src/
+COPY backend/tsconfig.json ./tsconfig.json
 RUN npm run build
 
 # Production stage
