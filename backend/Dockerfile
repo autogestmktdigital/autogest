@@ -1,7 +1,9 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-bullseye-slim AS builder
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
 RUN npm ci
@@ -14,9 +16,11 @@ COPY backend/tsconfig.json ./tsconfig.json
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine
+FROM node:20-bullseye-slim
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
 RUN npm ci --omit=dev
