@@ -4,6 +4,8 @@ import { authMiddleware, adminOnly, upload } from '../middleware';
 
 const router = Router();
 
+router.get('/public/:id', vehicleController.publicGetById);
+router.get('/public', vehicleController.publicList);
 router.get('/', authMiddleware, vehicleController.list);
 router.get('/:id', authMiddleware, vehicleController.getById);
 router.post('/', authMiddleware, upload.array('images', 10), vehicleController.create);

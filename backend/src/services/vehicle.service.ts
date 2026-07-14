@@ -85,6 +85,16 @@ export class VehicleService {
     return vehicle;
   }
 
+  async getPublicById(id: number) {
+    const vehicle = await prisma.vehicle.findFirst({
+      where: { id, status: 'available' },
+    });
+    if (!vehicle) {
+      throw new AppError('Veículo não encontrado', 404);
+    }
+    return vehicle;
+  }
+
   async create(data: Prisma.VehicleCreateInput) {
     return prisma.vehicle.create({ data });
   }
@@ -120,7 +130,7 @@ export class VehicleService {
 
     return vehicles.map((v) => ({
       id: v.id,
-      titulo: `${v.brand} ${v.model} ${v.year}`,
+      titulo: `${v.brand} ${v.model} ${v.year}${v.modelYear ? `/${v.modelYear}` : ''}`,
       preco: `R$ ${v.price.toLocaleString('pt-BR')}`,
       km: `${v.mileageKm.toLocaleString('pt-BR')} km`,
       combustivel: v.fuel,

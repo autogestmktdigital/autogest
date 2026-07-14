@@ -3,6 +3,41 @@ import { vehicleService } from '../services/vehicle.service';
 import type { VehicleFilters } from '../services/vehicle.service';
 
 export const vehicleController = {
+  async publicList(req: Request, res: Response, next: NextFunction) {
+    try {
+      const filters: VehicleFilters = {
+        brand: req.query.brand as string | undefined,
+        model: req.query.model as string | undefined,
+        yearMin: req.query.yearMin ? Number(req.query.yearMin) : undefined,
+        yearMax: req.query.yearMax ? Number(req.query.yearMax) : undefined,
+        priceMin: req.query.priceMin ? Number(req.query.priceMin) : undefined,
+        priceMax: req.query.priceMax ? Number(req.query.priceMax) : undefined,
+        fuel: req.query.fuel as VehicleFilters['fuel'],
+        transmission: req.query.transmission as VehicleFilters['transmission'],
+        search: req.query.search as string | undefined,
+        page: req.query.page ? Number(req.query.page) : undefined,
+        limit: req.query.limit ? Number(req.query.limit) : undefined,
+      };
+
+      const result = await vehicleService.list({ ...filters, status: 'available' });
+
+      return res.json({ success: true, ...result });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async publicGetById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = Number(req.params.id);
+      const vehicle = await vehicleService.getPublicById(id);
+
+      return res.json({ success: true, data: vehicle });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async list(req: Request, res: Response, next: NextFunction) {
     try {
       const filters: VehicleFilters = {
