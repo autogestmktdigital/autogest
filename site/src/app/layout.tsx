@@ -6,14 +6,17 @@ import { Footer } from '@/components/site/footer';
 export const metadata: Metadata = {
   title: 'Brothers Multimarcas',
   description: 'Seu próximo carro começa com informação. Veículos selecionados, revisados e com as melhores condições do mercado.',
+  icons: {
+    icon: '/favicon-oficial.png',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>
+      <body className="bg-brothers-dark text-white min-h-screen flex flex-col">
         <Header />
-        {children}
+        <main className="flex-1">{children}</main>
         <Footer />
       </body>
     </html>

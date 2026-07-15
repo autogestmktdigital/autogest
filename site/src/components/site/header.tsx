@@ -22,7 +22,7 @@ export function Header() {
 
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-6">
         <Link href="/" className="flex items-center">
-          <img src="/logo.svg" alt="Brothers Multimarcas" className="h-14 w-auto" />
+          <img src="/logo-oficial.png" alt="Brothers Multimarcas" className="h-14 w-auto" />
         </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">

@@ -26,7 +26,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 lg:px-6">
         <div className="grid gap-10 md:grid-cols-3">
           <div>
-            <img src="/logo.svg" alt="Brothers Multimarcas" className="mb-4 h-16 w-auto" />
+            <img src="/logo-oficial.png" alt="Brothers Multimarcas" className="mb-4 h-16 w-auto" />
             <p className="text-sm leading-relaxed text-white/70">
               Seu próximo carro começa com informação. Veículos selecionados, revisados e com as melhores condições do mercado.
             </p>

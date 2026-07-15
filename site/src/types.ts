@@ -14,6 +14,7 @@ export interface Vehicle {
   fuel: FuelType;
   color: string;
   transmission: TransmissionType;
+  plate?: string | null;
   description?: string | null;
   features?: string | null;
   images?: string | null;

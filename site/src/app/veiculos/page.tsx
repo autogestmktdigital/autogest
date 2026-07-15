@@ -2,9 +2,17 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronRight, Fuel, Gauge, Search, SlidersHorizontal } from 'lucide-react';
-import { formatVehicleYear, getVehicles } from '@/lib/api';
+import { Fuel, Gauge, Search, SlidersHorizontal } from 'lucide-react';
+import { formatVehicleYear, getImageUrl, getVehicles } from '@/lib/api';
 import type { Vehicle } from '@/types';
+
+function formatCurrency(value: number) {
+  return value.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  });
+}
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -191,16 +199,17 @@ export default function VehiclesPage() {
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {filteredVehicles.map((vehicle) => (
                     <Link key={vehicle.id} href={`/veiculos/${vehicle.id}`} className="overflow-hidden rounded-2xl border border-white/10 bg-brothers-gray transition hover:-translate-y-1 hover:border-brothers-green/40">
-                      <div className="aspect-[4/3] bg-black">
+                      <div className="aspect-[4/3] bg-brothers-dark">
                         <img
-                          src={vehicle.images?.split(',')[0] ? `https://autogest-production-404d.up.railway.app/uploads/${vehicle.images.split(',')[0]}` : '/placeholder-car.svg'}
+                          src={vehicle.images?.split(',')[0] ? getImageUrl(vehicle.images.split(',')[0]) : '/logo-oficial.png'}
                           alt={`${vehicle.brand} ${vehicle.model}`}
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-contain p-6"
                         />
                       </div>
                       <div className="p-5">
                         <p className="text-sm text-brothers-green">{formatVehicleYear(vehicle)}</p>
-                        <h3 className="mt-1 text-xl font-semibold">{vehicle.brand} {vehicle.model}</h3>
+                        <h3 className="mt-1 text-xl font-semibold">{vehicle.brand} {vehicle.model}{vehicle.version ? ` ${vehicle.version}` : ''}</h3>
+                        <p className="mt-3 text-2xl font-extrabold text-brothers-green">{formatCurrency(vehicle.price)}</p>
                         <div className="mt-4 flex items-center justify-between text-sm text-white/70">
                           <span className="flex items-center gap-1">
                             <Gauge className="h-4 w-4" />
@@ -211,6 +220,7 @@ export default function VehiclesPage() {
                             {vehicle.fuel}
                           </span>
                         </div>
+                        {vehicle.plate ? <p className="mt-3 text-sm text-white/60">Placa: {vehicle.plate}</p> : null}
                       </div>
                     </Link>
                   ))}

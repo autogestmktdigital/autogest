@@ -7,6 +7,14 @@ import { ArrowLeft, Calendar, CheckCircle, ChevronLeft, ChevronRight, Fuel, Gaug
 import { formatVehicleYear, getImageUrl, getVehicle } from '@/lib/api';
 import type { Vehicle } from '@/types';
 
+function formatCurrency(value: number) {
+  return value.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  });
+}
+
 export default function VehicleDetailPage() {
   const params = useParams();
   const id = Number(params.id);
@@ -46,7 +54,7 @@ export default function VehicleDetailPage() {
     );
   }
 
-  const images = vehicle.images && vehicle.images.length > 0 ? vehicle.images.split(',').map((img) => getImageUrl(img)) : ['/logo.png'];
+  const images = vehicle.images && vehicle.images.length > 0 ? vehicle.images.split(',').map((img) => getImageUrl(img)) : ['/logo-oficial.png'];
   const fuelLabel: Record<string, string> = {
     flex: 'Flex',
     gasoline: 'Gasolina',
@@ -96,8 +104,9 @@ export default function VehicleDetailPage() {
             <div>
               <p className="text-sm text-brothers-green">{formatVehicleYear(vehicle)}</p>
               <h1 className="mt-2 text-3xl font-bold md:text-4xl">
-                {vehicle.brand} {vehicle.model}
+                {vehicle.brand} {vehicle.model}{vehicle.version ? ` ${vehicle.version}` : ''}
               </h1>
+              <p className="mt-3 text-3xl font-extrabold text-brothers-green">{formatCurrency(vehicle.price)}</p>
               <p className="mt-2 text-white/70">{vehicle.description || 'Veículo disponível para você.'}</p>
             </div>
 
@@ -109,6 +118,7 @@ export default function VehicleDetailPage() {
                 { icon: Fuel, label: 'Combustível', value: fuelLabel[vehicle.fuel] || vehicle.fuel },
                 { icon: Settings, label: 'Câmbio', value: transmissionLabel[vehicle.transmission] || vehicle.transmission },
                 { icon: Palette, label: 'Cor', value: vehicle.color },
+                { icon: CheckCircle, label: 'Placa', value: vehicle.plate || 'Não informado' },
               ].map((item) => (
                 <div key={item.label} className="rounded-2xl border border-white/10 bg-brothers-gray p-4">
                   <item.icon className="h-5 w-5 text-brothers-green" />
@@ -117,6 +127,13 @@ export default function VehicleDetailPage() {
                 </div>
               ))}
             </div>
+
+            {vehicle.description ? (
+              <div className="rounded-2xl border border-white/10 bg-brothers-gray p-5">
+                <h2 className="mb-3 text-lg font-semibold text-brothers-green">Descrição do veículo</h2>
+                <p className="text-sm leading-relaxed text-white/80">{vehicle.description}</p>
+              </div>
+            ) : null}
 
             {features.length > 0 ? (
               <div className="rounded-2xl border border-white/10 bg-brothers-gray p-5">

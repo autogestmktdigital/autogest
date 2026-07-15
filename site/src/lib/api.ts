@@ -2,6 +2,35 @@ import type { Vehicle, VehicleDetailResponse, VehicleListResponse } from '@/type
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
+function parseJsonArray(value?: string | null) {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function maskPlate(plate?: string | null) {
+  if (!plate) return null;
+  const sanitized = plate.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (!sanitized) return null;
+  return `${'X'.repeat(Math.max(sanitized.length - 1, 0))}${sanitized.slice(-1)}`;
+}
+
+function parseVehicle(raw: Vehicle & Record<string, unknown>): Vehicle {
+  const parsedFeatures = parseJsonArray(typeof raw.features === 'string' ? raw.features : null);
+  const parsedImages = parseJsonArray(typeof raw.images === 'string' ? raw.images : null);
+
+  return {
+    ...raw,
+    features: parsedFeatures.length > 0 ? parsedFeatures.join(', ') : null,
+    images: parsedImages.length > 0 ? parsedImages.join(',') : null,
+    plate: maskPlate(typeof raw.plate === 'string' ? raw.plate : null),
+  };
+}
+
 function toImageUrl(image: string) {
   if (!image) return '/placeholder-car.svg';
   if (image.startsWith('http://') || image.startsWith('https://')) return image;
@@ -40,9 +69,17 @@ export async function getVehicles(params: Record<string, string | number | undef
     }
   });
 
-  return request<VehicleListResponse>(`/vehicles/public${query.toString() ? `?${query.toString()}` : ''}`);
+  const result = await request<VehicleListResponse>(`/vehicles/public${query.toString() ? `?${query.toString()}` : ''}`);
+  return {
+    ...result,
+    data: Array.isArray(result.data) ? result.data.map((vehicle) => parseVehicle(vehicle as Vehicle & Record<string, unknown>)) : [],
+  };
 }
 
 export async function getVehicle(id: number) {
-  return request<VehicleDetailResponse>(`/vehicles/public/${id}`);
+  const result = await request<VehicleDetailResponse>(`/vehicles/public/${id}`);
+  return {
+    ...result,
+    data: parseVehicle(result.data as Vehicle & Record<string, unknown>),
+  };
 }
