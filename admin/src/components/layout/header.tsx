@@ -10,7 +10,7 @@ interface HeaderProps {
 
 export function Header({ title, breadcrumb, onMenuToggle }: HeaderProps) {
   const user = typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem('user') || '{}')
+    ? JSON.parse(sessionStorage.getItem('user') || '{}')
     : {};
 
   return (

@@ -12,7 +12,7 @@ async function api<T = unknown>(endpoint: string, options: ApiOptions = {}): Pro
   };
 
   if (!skipAuth) {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
@@ -30,8 +30,8 @@ async function api<T = unknown>(endpoint: string, options: ApiOptions = {}): Pro
 
   if (response.status === 401) {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
       window.location.href = '/login';
     }
     throw new Error('Não autorizado');

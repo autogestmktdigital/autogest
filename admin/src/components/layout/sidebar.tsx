@@ -32,13 +32,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     window.location.href = '/login';
   };
 
   const user = typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem('user') || '{}')
+    ? JSON.parse(sessionStorage.getItem('user') || '{}')
     : {};
 
   return (

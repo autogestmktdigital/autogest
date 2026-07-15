@@ -37,7 +37,7 @@ export default function ConfiguracoesPage() {
   const [newUserError, setNewUserError] = useState('');
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const user = JSON.parse(sessionStorage.getItem('user') || '{}');
     setCurrentUser(user);
     fetchUsers();
   }, []);

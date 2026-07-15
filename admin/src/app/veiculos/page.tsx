@@ -22,7 +22,10 @@ interface Vehicle {
   id: number;
   brand: string;
   model: string;
+  version?: string;
+  plate?: string;
   year: number;
+  modelYear?: number;
   price: number;
   mileageKm: number;
   fuel: string;
@@ -43,7 +46,8 @@ export default function VeiculosPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [fuelFilter, setFuelFilter] = useState('');
+  const [brandFilter, setBrandFilter] = useState('');
+  const [modelFilter, setModelFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -54,7 +58,8 @@ export default function VeiculosPage() {
       const params = new URLSearchParams();
       if (search) params.set('search', search);
       if (statusFilter) params.set('status', statusFilter);
-      if (fuelFilter) params.set('fuel', fuelFilter);
+      if (brandFilter) params.set('brand', brandFilter);
+      if (modelFilter) params.set('model', modelFilter);
       params.set('page', String(page));
       params.set('limit', '10');
 
@@ -71,7 +76,7 @@ export default function VeiculosPage() {
   useEffect(() => {
     fetchVehicles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, statusFilter, fuelFilter]);
+  }, [page, statusFilter, brandFilter, modelFilter]);
 
   function handleSearch() {
     setPage(1);
@@ -116,19 +121,18 @@ export default function VeiculosPage() {
               <option value="reserved">Reservado</option>
               <option value="sold">Vendido</option>
             </Select>
-            <Select
-              value={fuelFilter}
-              onChange={(e) => { setFuelFilter(e.target.value); setPage(1); }}
+            <Input
+              placeholder="Marca..."
+              value={brandFilter}
+              onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
               className="w-full sm:w-40"
-            >
-              <option value="">Combustível</option>
-              <option value="flex">Flex</option>
-              <option value="gasoline">Gasolina</option>
-              <option value="ethanol">Etanol</option>
-              <option value="diesel">Diesel</option>
-              <option value="electric">Elétrico</option>
-              <option value="hybrid">Híbrido</option>
-            </Select>
+            />
+            <Input
+              placeholder="Modelo..."
+              value={modelFilter}
+              onChange={(e) => { setModelFilter(e.target.value); setPage(1); }}
+              className="w-full sm:w-40"
+            />
           </div>
           <Link href="/veiculos/novo">
             <Button>
@@ -145,6 +149,7 @@ export default function VeiculosPage() {
               <TableRow>
                 <TableHead>Foto</TableHead>
                 <TableHead>Veículo</TableHead>
+                <TableHead>Placa</TableHead>
                 <TableHead>Ano</TableHead>
                 <TableHead>Preço</TableHead>
                 <TableHead>KM</TableHead>
@@ -165,7 +170,7 @@ export default function VeiculosPage() {
                 ))
               ) : vehicles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                     Nenhum veículo encontrado
                   </TableCell>
                 </TableRow>
@@ -188,9 +193,10 @@ export default function VeiculosPage() {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {vehicle.brand} {vehicle.model}
+                      {vehicle.brand} {vehicle.model} {vehicle.version && `(${vehicle.version})`}
                     </TableCell>
-                    <TableCell>{vehicle.year}</TableCell>
+                    <TableCell>{vehicle.plate || '-'}</TableCell>
+                    <TableCell>{vehicle.modelYear ? `${vehicle.year}/${vehicle.modelYear}` : vehicle.year}</TableCell>
                     <TableCell>{formatCurrency(vehicle.price)}</TableCell>
                     <TableCell>{vehicle.mileageKm?.toLocaleString('pt-BR')} km</TableCell>
                     <TableCell>

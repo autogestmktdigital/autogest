@@ -28,8 +28,8 @@ export default function LoginPage() {
       }>('/auth/login', { email, password }, { skipAuth: true });
 
       if (response.success && response.token) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        sessionStorage.setItem('token', response.token);
+        sessionStorage.setItem('user', JSON.stringify(response.user));
         router.push('/dashboard');
       }
     } catch (err) {
