@@ -30,7 +30,12 @@ model Vehicle {
   id           Int      @id @default(autoincrement())
   brand        String
   model        String
+  version      String?
+  plate        String?
+  chassis      String?
+  renavam      String?
   year         Int
+  modelYear    Int?     @map("model_year")
   price        Float
   mileageKm    Int      @map("mileage_km")
   fuel         String   @default("flex")
@@ -39,6 +44,8 @@ model Vehicle {
   description  String?
   features     String?
   images       String?
+  reportFile   String?  @map("report_file")
+  documentFile String?  @map("document_file")
   status       String   @default("available")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

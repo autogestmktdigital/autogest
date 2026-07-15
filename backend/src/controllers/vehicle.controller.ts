@@ -43,6 +43,7 @@ export const vehicleController = {
       const filters: VehicleFilters = {
         brand: req.query.brand as string | undefined,
         model: req.query.model as string | undefined,
+        plate: req.query.plate as string | undefined,
         yearMin: req.query.yearMin ? Number(req.query.yearMin) : undefined,
         yearMax: req.query.yearMax ? Number(req.query.yearMax) : undefined,
         priceMin: req.query.priceMin ? Number(req.query.priceMin) : undefined,
@@ -76,15 +77,20 @@ export const vehicleController = {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const files = req.files as Express.Multer.File[] | undefined;
-      const images = files ? files.map((f) => f.filename) : [];
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const images = files?.images ? files.images.map((f) => f.filename) : [];
+      const reportFile = files?.reportFile?.[0]?.filename;
+      const documentFile = files?.documentFile?.[0]?.filename;
 
       const data = {
         ...req.body,
         year: Number(req.body.year),
+        modelYear: req.body.modelYear ? Number(req.body.modelYear) : undefined,
         price: Number(req.body.price),
         mileageKm: Number(req.body.mileageKm),
         images,
+        ...(reportFile && { reportFile }),
+        ...(documentFile && { documentFile }),
       };
 
       const vehicle = await vehicleService.create(data);
@@ -98,14 +104,19 @@ export const vehicleController = {
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);
-      const files = req.files as Express.Multer.File[] | undefined;
-      const images = files && files.length > 0 ? files.map((f) => f.filename) : undefined;
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const images = files?.images && files.images.length > 0 ? files.images.map((f) => f.filename) : undefined;
+      const reportFile = files?.reportFile?.[0]?.filename;
+      const documentFile = files?.documentFile?.[0]?.filename;
 
       const data: Record<string, unknown> = { ...req.body };
       if (req.body.year) data.year = Number(req.body.year);
+      if (req.body.modelYear) data.modelYear = Number(req.body.modelYear);
       if (req.body.price) data.price = Number(req.body.price);
       if (req.body.mileageKm) data.mileageKm = Number(req.body.mileageKm);
       if (images) data.images = images;
+      if (reportFile) data.reportFile = reportFile;
+      if (documentFile) data.documentFile = documentFile;
 
       const vehicle = await vehicleService.update(id, data);
 
@@ -133,6 +144,35 @@ export const vehicleController = {
       const vehicle = await vehicleService.updateStatus(id, status);
 
       return res.json({ success: true, data: vehicle });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async addExpense(req: Request, res: Response, next: NextFunction) {
+    try {
+      const vehicleId = Number(req.params.id);
+      const { type, description, amount, date } = req.body;
+      
+      const expense = await vehicleService.addExpense(vehicleId, {
+        type,
+        description,
+        amount: Number(amount),
+        date,
+      });
+
+      return res.status(201).json({ success: true, data: expense });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async removeExpense(req: Request, res: Response, next: NextFunction) {
+    try {
+      const expenseId = Number(req.params.expenseId);
+      await vehicleService.removeExpense(expenseId);
+
+      return res.json({ success: true, message: 'Gasto removido com sucesso' });
     } catch (error) {
       next(error);
     }

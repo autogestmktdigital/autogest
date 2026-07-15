@@ -6,6 +6,7 @@ import type { VehicleStatus, FuelType, TransmissionType } from '../types';
 export interface VehicleFilters {
   brand?: string;
   model?: string;
+  plate?: string;
   yearMin?: number;
   yearMax?: number;
   priceMin?: number;
@@ -28,6 +29,7 @@ export class VehicleService {
 
     if (filters.brand) where.brand = { contains: filters.brand };
     if (filters.model) where.model = { contains: filters.model };
+    if (filters.plate) where.plate = { contains: filters.plate };
     if (filters.fuel) where.fuel = filters.fuel;
     if (filters.transmission) where.transmission = filters.transmission;
     if (filters.status) {
@@ -78,21 +80,49 @@ export class VehicleService {
   }
 
   async getById(id: number) {
-    const vehicle = await prisma.vehicle.findUnique({ where: { id } });
+    const vehicle = await prisma.vehicle.findUnique({ 
+      where: { id },
+      include: { expenses: true }
+    });
     if (!vehicle) {
       throw new AppError('Veículo não encontrado', 404);
     }
-    return vehicle;
+    return {
+      ...vehicle,
+      features: vehicle.features ? JSON.parse(vehicle.features) : [],
+      images: vehicle.images ? JSON.parse(vehicle.images) : [],
+    };
   }
 
   async getPublicById(id: number) {
     const vehicle = await prisma.vehicle.findFirst({
       where: { id, status: 'available' },
+      include: { expenses: true }
     });
     if (!vehicle) {
       throw new AppError('Veículo não encontrado', 404);
     }
-    return vehicle;
+    return {
+      ...vehicle,
+      features: vehicle.features ? JSON.parse(vehicle.features) : [],
+      images: vehicle.images ? JSON.parse(vehicle.images) : [],
+    };
+  }
+
+  async addExpense(vehicleId: number, data: { type: string; description: string; amount: number; date: string }) {
+    await this.getById(vehicleId);
+    return prisma.vehicleExpense.create({
+      data: {
+        ...data,
+        vehicleId,
+      },
+    });
+  }
+
+  async removeExpense(expenseId: number) {
+    return prisma.vehicleExpense.delete({
+      where: { id: expenseId },
+    });
   }
 
   async create(data: Prisma.VehicleCreateInput) {
