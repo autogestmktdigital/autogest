@@ -38,9 +38,18 @@ const documentFileFilter = (_req: Express.Request, file: Express.Multer.File, cb
   }
 };
 
+const allFilesFilter = (_req: Express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou PDF.', 400));
+  }
+};
+
 export const upload = multer({
   storage,
-  fileFilter: imageFileFilter,
+  fileFilter: allFilesFilter,
   limits: {
     fileSize: env.MAX_FILE_SIZE_MB * 1024 * 1024,
   },

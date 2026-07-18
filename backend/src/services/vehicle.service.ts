@@ -34,8 +34,6 @@ export class VehicleService {
     if (filters.transmission) where.transmission = filters.transmission;
     if (filters.status) {
       where.status = filters.status;
-    } else {
-      where.status = 'available';
     }
 
     if (filters.yearMin || filters.yearMax) {
@@ -69,7 +67,11 @@ export class VehicleService {
     ]);
 
     return {
-      data: vehicles,
+      data: vehicles.map((v) => ({
+        ...v,
+        features: v.features ? JSON.parse(v.features) : [],
+        images: v.images ? JSON.parse(v.images) : [],
+      })),
       pagination: {
         page,
         limit,

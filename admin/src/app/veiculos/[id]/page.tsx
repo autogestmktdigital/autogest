@@ -47,6 +47,7 @@ interface Vehicle {
   reportFile?: string;
   documentFile?: string;
   status: string;
+  createdAt: string;
   expenses?: Array<{
     id: number;
     type: string;
@@ -67,6 +68,7 @@ export default function EditVeiculoPage() {
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newPreviews, setNewPreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [coverImage, setCoverImage] = useState(0);
   const [activeTab, setActiveTab] = useState('info');
   const [expenses, setExpenses] = useState<Array<{ id: number; type: string; description: string; amount: number; date: string }>>([]);
   const [newExpense, setNewExpense] = useState({ type: 'mecanica', description: '', amount: '', date: '' });
@@ -102,6 +104,7 @@ export default function EditVeiculoPage() {
     description: '',
     features: [] as string[],
     status: 'available',
+    createdAt: '',
   });
 
   const availableModels = form.brand ? (MODELS_BY_BRAND[form.brand] || ['Outro modelo']) : [];
@@ -129,6 +132,7 @@ export default function EditVeiculoPage() {
           description: v.description || '',
           features: Array.isArray(v.features) ? v.features : [],
           status: v.status,
+          createdAt: v.createdAt ? new Date(v.createdAt).toISOString().split('T')[0] : '',
         });
         setExistingImages(v.images || []);
         setExistingReportFile(v.reportFile || null);
@@ -145,7 +149,8 @@ export default function EditVeiculoPage() {
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const finalValue = name === 'plate' ? value.toUpperCase() : value;
+    setForm((prev) => ({ ...prev, [name]: finalValue }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -218,6 +223,10 @@ export default function EditVeiculoPage() {
 
   function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
+    if (existingImages.length + newImages.length + files.length > 12) {
+      alert('Limite máximo de 12 imagens atingido');
+      return;
+    }
     setNewImages((prev) => [...prev, ...files]);
 
     files.forEach((file) => {
@@ -243,7 +252,8 @@ export default function EditVeiculoPage() {
     if (!form.brand.trim()) newErrors.brand = 'Marca é obrigatória';
     if (!form.model.trim()) newErrors.model = 'Modelo é obrigatório';
     if (!form.year || isNaN(Number(form.year))) newErrors.year = 'Ano inválido';
-    if (!form.price || isNaN(Number(form.price.replace(',', '.')))) newErrors.price = 'Preço inválido';
+    const priceRaw = String(form.price).replace(',', '.');
+    if (!form.price || isNaN(Number(priceRaw))) newErrors.price = 'Preço inválido';
     if (!form.mileageKm || isNaN(Number(form.mileageKm))) newErrors.mileageKm = 'Quilometragem inválida';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -279,17 +289,34 @@ export default function EditVeiculoPage() {
         formData.append('features', JSON.stringify(form.features));
       }
 
-      if (reportFile) formData.append('reportFile', reportFile);
-      if (documentFile) formData.append('documentFile', documentFile);
+      // Reorganizar imagens para que a capa seja a primeira
+      const allImages = [...existingImages];
+      const reorderedNewImages = [...newImages];
+      
+      if (coverImage >= 0 && coverImage < allImages.length) {
+        // Capa é uma imagem existente
+        const [cover] = allImages.splice(coverImage, 1);
+        allImages.unshift(cover);
+      } else if (coverImage >= allImages.length && coverImage < allImages.length + newImages.length) {
+        // Capa é uma nova imagem
+        const newIndex = coverImage - allImages.length;
+        const [cover] = reorderedNewImages.splice(newIndex, 1);
+        reorderedNewImages.unshift(cover);
+      }
 
-      newImages.forEach((file) => {
+      if (allImages.length > 0) {
+        formData.append('existingImages', JSON.stringify(allImages));
+      }
+
+      reorderedNewImages.forEach((file) => {
         formData.append('images', file);
       });
 
       await apiClient.put(`/vehicles/${id}`, formData);
       router.push('/veiculos');
-    } catch {
-      // Error handled by api client
+    } catch (err: any) {
+      console.error('Erro ao salvar veículo:', err);
+      alert(err?.response?.data?.message || err?.message || 'Erro ao salvar veículo');
     } finally {
       setLoading(false);
     }
@@ -427,6 +454,13 @@ export default function EditVeiculoPage() {
                     placeholder="2024"
                   />
                   <Input
+                    label="Data do Cadastro"
+                    name="createdAt"
+                    type="date"
+                    value={form.createdAt || ''}
+                    readOnly
+                  />
+                  <Input
                     label="Preço (R$) *"
                     name="price"
                     value={formatCurrencyDisplay(form.price)}
@@ -488,12 +522,9 @@ export default function EditVeiculoPage() {
                   </button>
                   {form.features.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {form.features.slice(0, 5).map((f) => (
+                      {form.features.map((f) => (
                         <span key={f} className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-700">{f}</span>
                       ))}
-                      {form.features.length > 5 && (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">+{form.features.length - 5} mais</span>
-                      )}
                     </div>
                   )}
                 </div>
@@ -591,18 +622,30 @@ export default function EditVeiculoPage() {
                       <p className="mb-2 text-sm font-medium text-gray-700">Imagens atuais</p>
                       <div className="grid grid-cols-3 gap-3">
                         {existingImages.map((img, index) => (
-                          <div key={index} className="group relative aspect-video overflow-hidden rounded-lg">
+                          <div key={index} className={`group relative aspect-video overflow-hidden rounded-lg ${coverImage === index ? 'ring-2 ring-blue-500' : ''}`}>
                             <img
                               src={`http://localhost:3001/uploads/${img}`}
                               alt={`Imagem ${index + 1}`}
                               className="h-full w-full object-cover"
                             />
+                            {coverImage === index && (
+                              <div className="absolute top-1 left-1 rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white font-medium">
+                                Capa
+                              </div>
+                            )}
                             <button
                               type="button"
                               onClick={() => removeExistingImage(index)}
                               className="absolute right-1 top-1 rounded-full bg-red-600 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
                             >
                               <X className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCoverImage(index)}
+                              className="absolute bottom-1 left-1 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
+                            >
+                              Definir capa
                             </button>
                           </div>
                         ))}
@@ -631,14 +674,26 @@ export default function EditVeiculoPage() {
                   {newPreviews.length > 0 && (
                     <div className="grid grid-cols-3 gap-3">
                       {newPreviews.map((preview, index) => (
-                        <div key={index} className="group relative aspect-video overflow-hidden rounded-lg">
+                        <div key={index} className={`group relative aspect-video overflow-hidden rounded-lg ${coverImage === existingImages.length + index ? 'ring-2 ring-blue-500' : ''}`}>
                           <img src={preview} alt={`Nova ${index + 1}`} className="h-full w-full object-cover" />
+                          {coverImage === existingImages.length + index && (
+                            <div className="absolute top-1 left-1 rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white font-medium">
+                              Capa
+                            </div>
+                          )}
                           <button
                             type="button"
                             onClick={() => removeNewImage(index)}
                             className="absolute right-1 top-1 rounded-full bg-red-600 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
                           >
                             <X className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCoverImage(existingImages.length + index)}
+                            className="absolute bottom-1 left-1 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
+                          >
+                            Definir capa
                           </button>
                         </div>
                       ))}
@@ -668,14 +723,6 @@ export default function EditVeiculoPage() {
             </div>
           </Dialog>
 
-          <div className="mt-6 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => router.back()}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar Alterações'}
-            </Button>
-          </div>
         </>
       )}
 
@@ -842,6 +889,15 @@ export default function EditVeiculoPage() {
               </CardContent>
             </Card>
           )}
+
+          <div className="mt-6 flex justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => router.back()}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Salvando...' : 'Salvar Alterações'}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

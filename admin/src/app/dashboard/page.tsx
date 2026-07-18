@@ -33,7 +33,7 @@ export default function DashboardPage() {
 
         const totalLeads = leadsRes.status === 'fulfilled' ? leadsRes.value.data.total : 0;
         const converted = leadsRes.status === 'fulfilled' ? (leadsRes.value.data.byStatus?.converted || 0) : 0;
-        const availableVehicles = vehiclesRes.status === 'fulfilled' ? vehiclesRes.value.total : 0;
+        const availableVehicles = vehiclesRes.status === 'fulfilled' ? vehiclesRes.value.pagination?.total : 0;
         const activeConversations = conversationsRes.status === 'fulfilled' ? conversationsRes.value.data.length : 0;
         const conversionRate = totalLeads > 0 ? Math.round((converted / totalLeads) * 100) : 0;
 

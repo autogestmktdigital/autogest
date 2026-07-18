@@ -77,10 +77,10 @@ export const vehicleController = {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const images = files?.images ? files.images.map((f) => f.filename) : [];
-      const reportFile = files?.reportFile?.[0]?.filename;
-      const documentFile = files?.documentFile?.[0]?.filename;
+      const files = req.files as Express.Multer.File[] | undefined;
+      const images = files?.filter(f => f.fieldname === 'images').map((f) => f.filename) || [];
+      const reportFile = files?.find(f => f.fieldname === 'reportFile')?.filename;
+      const documentFile = files?.find(f => f.fieldname === 'documentFile')?.filename;
 
       const data = {
         ...req.body,
@@ -88,7 +88,8 @@ export const vehicleController = {
         modelYear: req.body.modelYear ? Number(req.body.modelYear) : undefined,
         price: Number(req.body.price),
         mileageKm: Number(req.body.mileageKm),
-        images,
+        images: images.length > 0 ? JSON.stringify(images) : undefined,
+        features: req.body.features ? req.body.features : undefined,
         ...(reportFile && { reportFile }),
         ...(documentFile && { documentFile }),
       };
@@ -104,17 +105,25 @@ export const vehicleController = {
   async update(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const images = files?.images && files.images.length > 0 ? files.images.map((f) => f.filename) : undefined;
-      const reportFile = files?.reportFile?.[0]?.filename;
-      const documentFile = files?.documentFile?.[0]?.filename;
+      const files = req.files as Express.Multer.File[] | undefined;
+      const newImages = files?.filter(f => f.fieldname === 'images').map((f) => f.filename) || [];
+      const reportFile = files?.find(f => f.fieldname === 'reportFile')?.filename;
+      const documentFile = files?.find(f => f.fieldname === 'documentFile')?.filename;
 
-      const data: Record<string, unknown> = { ...req.body };
+      // Remover campos que não existem no schema Prisma
+      const { existingImages, ...bodyData } = req.body;
+
+      const data: Record<string, unknown> = { ...bodyData };
       if (req.body.year) data.year = Number(req.body.year);
       if (req.body.modelYear) data.modelYear = Number(req.body.modelYear);
       if (req.body.price) data.price = Number(req.body.price);
       if (req.body.mileageKm) data.mileageKm = Number(req.body.mileageKm);
-      if (images) data.images = images;
+      
+      // Combinar imagens existentes com novas
+      const existingImagesList = existingImages ? JSON.parse(existingImages) : [];
+      const allImages = [...existingImagesList, ...newImages];
+      if (allImages.length > 0) data.images = JSON.stringify(allImages);
+      
       if (reportFile) data.reportFile = reportFile;
       if (documentFile) data.documentFile = documentFile;
 

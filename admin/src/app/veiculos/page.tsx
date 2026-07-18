@@ -34,20 +34,21 @@ interface Vehicle {
 }
 
 interface VehiclesResponse {
-  success: boolean;
   data: Vehicle[];
-  total: number;
-  page: number;
-  totalPages: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export default function VeiculosPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [plateFilter, setPlateFilter] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [brandFilter, setBrandFilter] = useState('');
-  const [modelFilter, setModelFilter] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -56,16 +57,15 @@ export default function VeiculosPage() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
+      if (plateFilter) params.set('plate', plateFilter);
       if (search) params.set('search', search);
       if (statusFilter) params.set('status', statusFilter);
-      if (brandFilter) params.set('brand', brandFilter);
-      if (modelFilter) params.set('model', modelFilter);
       params.set('page', String(page));
-      params.set('limit', '10');
+      params.set('limit', '50');
 
       const res = await apiClient.get<VehiclesResponse>(`/vehicles?${params.toString()}`);
       setVehicles(res.data);
-      setTotalPages(res.totalPages || 1);
+      setTotalPages(res.pagination?.totalPages || 1);
     } catch {
       setVehicles([]);
     } finally {
@@ -76,7 +76,16 @@ export default function VeiculosPage() {
   useEffect(() => {
     fetchVehicles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, statusFilter, brandFilter, modelFilter]);
+  }, [page, statusFilter, plateFilter]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPage(1);
+      fetchVehicles();
+    }, 500);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   function handleSearch() {
     setPage(1);
@@ -100,11 +109,17 @@ export default function VeiculosPage() {
       <div className="p-4 sm:p-6">
         {/* Actions bar */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Input
+              placeholder="Placa..."
+              value={plateFilter}
+              onChange={(e) => { setPlateFilter(e.target.value); setPage(1); }}
+              className="w-full sm:w-32"
+            />
+            <div className="relative w-full sm:w-[28rem]">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
-                placeholder="Buscar por marca ou modelo..."
+                placeholder="Marca ou modelo..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -114,25 +129,13 @@ export default function VeiculosPage() {
             <Select
               value={statusFilter}
               onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="w-full sm:w-40"
+              className="w-full sm:w-36"
             >
               <option value="">Todos Status</option>
               <option value="available">Disponível</option>
               <option value="reserved">Reservado</option>
               <option value="sold">Vendido</option>
             </Select>
-            <Input
-              placeholder="Marca..."
-              value={brandFilter}
-              onChange={(e) => { setBrandFilter(e.target.value); setPage(1); }}
-              className="w-full sm:w-40"
-            />
-            <Input
-              placeholder="Modelo..."
-              value={modelFilter}
-              onChange={(e) => { setModelFilter(e.target.value); setPage(1); }}
-              className="w-full sm:w-40"
-            />
           </div>
           <Link href="/veiculos/novo">
             <Button>

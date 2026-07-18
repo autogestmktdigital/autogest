@@ -50,9 +50,11 @@ export default function NovoVeiculoPage() {
     color: '',
     description: '',
     features: [] as string[],
+    registrationDate: new Date().toISOString().split('T')[0],
   });
 
   const [previews, setPreviews] = useState<string[]>([]);
+  const [coverImage, setCoverImage] = useState(0);
   const [showFeaturesDialog, setShowFeaturesDialog] = useState(false);
 
   const availableModels = form.brand ? (MODELS_BY_BRAND[form.brand] || ['Outro modelo']) : [];
@@ -60,7 +62,8 @@ export default function NovoVeiculoPage() {
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const finalValue = name === 'plate' ? value.toUpperCase() : value;
+    setForm((prev) => ({ ...prev, [name]: finalValue }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -108,6 +111,10 @@ export default function NovoVeiculoPage() {
 
   function handleImageChange(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
+    if (images.length + files.length > 12) {
+      alert('Limite máximo de 12 imagens atingido');
+      return;
+    }
     setImages((prev) => [...prev, ...files]);
 
     files.forEach((file) => {
@@ -159,6 +166,7 @@ export default function NovoVeiculoPage() {
       formData.append('transmission', form.transmission);
       formData.append('color', form.color);
       formData.append('description', form.description);
+      if (form.registrationDate) formData.append('registrationDate', form.registrationDate);
 
       if (form.features.length > 0) {
         formData.append('features', JSON.stringify(form.features));
@@ -167,14 +175,22 @@ export default function NovoVeiculoPage() {
       if (reportFile) formData.append('reportFile', reportFile);
       if (documentFile) formData.append('documentFile', documentFile);
 
-      images.forEach((file) => {
+      // Reorganizar imagens para que a capa seja a primeira
+      const orderedImages = [...images];
+      if (coverImage > 0 && coverImage < orderedImages.length) {
+        const [cover] = orderedImages.splice(coverImage, 1);
+        orderedImages.unshift(cover);
+      }
+
+      orderedImages.forEach((file) => {
         formData.append('images', file);
       });
 
       await apiClient.post('/vehicles', formData);
       router.push('/veiculos');
-    } catch {
-      // Error handled by api client
+    } catch (err: any) {
+      console.error('Erro ao cadastrar veículo:', err);
+      alert(err?.response?.data?.message || err?.message || 'Erro ao cadastrar veículo');
     } finally {
       setLoading(false);
     }
@@ -259,6 +275,14 @@ export default function NovoVeiculoPage() {
                     value={form.modelYear}
                     onChange={handleChange}
                     placeholder="2024"
+                  />
+                  <Input
+                    label="Data do Cadastro"
+                    name="registrationDate"
+                    type="date"
+                    value={form.registrationDate}
+                    onChange={handleChange}
+                    readOnly
                   />
                   <Input
                     label="Preço (R$) *"
@@ -398,18 +422,30 @@ export default function NovoVeiculoPage() {
                   {previews.length > 0 && (
                     <div className="grid grid-cols-3 gap-3">
                       {previews.map((preview, index) => (
-                        <div key={index} className="group relative aspect-video overflow-hidden rounded-lg">
+                        <div key={index} className={`group relative aspect-video overflow-hidden rounded-lg ${coverImage === index ? 'ring-2 ring-blue-500' : ''}`}>
                           <img
                             src={preview}
                             alt={`Preview ${index + 1}`}
                             className="h-full w-full object-cover"
                           />
+                          {coverImage === index && (
+                            <div className="absolute top-1 left-1 rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white font-medium">
+                              Capa
+                            </div>
+                          )}
                           <button
                             type="button"
                             onClick={() => removeImage(index)}
                             className="absolute right-1 top-1 rounded-full bg-red-600 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
                           >
                             <X className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCoverImage(index)}
+                            className="absolute bottom-1 left-1 rounded-full bg-blue-600 px-2 py-0.5 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 cursor-pointer"
+                          >
+                            Definir capa
                           </button>
                         </div>
                       ))}
