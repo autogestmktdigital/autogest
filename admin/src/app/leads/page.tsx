@@ -47,6 +47,9 @@ export default function LeadsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [channelFilter, setChannelFilter] = useState('');
+  const [sellerFilter, setSellerFilter] = useState('');
+  const [phoneFilter, setPhoneFilter] = useState('');
+  const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -57,6 +60,8 @@ export default function LeadsPage() {
       if (search) params.set('search', search);
       if (statusFilter) params.set('status', statusFilter);
       if (channelFilter) params.set('channel', channelFilter);
+      if (sellerFilter) params.set('assignedToId', sellerFilter);
+      if (phoneFilter) params.set('phone', phoneFilter);
       params.set('page', String(page));
       params.set('limit', '10');
 
@@ -71,9 +76,21 @@ export default function LeadsPage() {
   }
 
   useEffect(() => {
+    async function fetchSellers() {
+      try {
+        const res = await apiClient.get<{ data: Array<{ id: number; name: string }> }>('/users');
+        setSellers(res.data || []);
+      } catch {
+        setSellers([]);
+      }
+    }
+    fetchSellers();
+  }, []);
+
+  useEffect(() => {
     fetchLeads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, statusFilter, channelFilter]);
+  }, [page, statusFilter, channelFilter, sellerFilter]);
 
   function handleSearch() {
     setPage(1);
@@ -89,13 +106,29 @@ export default function LeadsPage() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder="Buscar por nome ou telefone..."
+              placeholder="Buscar por nome..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               className="pl-9"
             />
           </div>
+          <Input
+            placeholder="Telefone..."
+            value={phoneFilter}
+            onChange={(e) => { setPhoneFilter(e.target.value); setPage(1); }}
+            className="w-full sm:w-40"
+          />
+          <Select
+            value={sellerFilter}
+            onChange={(e) => { setSellerFilter(e.target.value); setPage(1); }}
+            className="w-full sm:w-44"
+          >
+            <option value="">Todos Vendedores</option>
+            {sellers.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
           <Select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}

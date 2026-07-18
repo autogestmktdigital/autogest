@@ -32,6 +32,11 @@ export class LeadService {
       ];
     }
 
+    // Filtro específico por telefone
+    if ((filters as any).phone) {
+      where.phone = { contains: (filters as any).phone };
+    }
+
     const [leads, total] = await Promise.all([
       prisma.lead.findMany({
         where,
