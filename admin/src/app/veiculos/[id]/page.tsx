@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Upload, X, ChevronDown, FileText, Eye, Trash2 } from 'lucide-react';
+import { ArrowLeft, Upload, X, ChevronDown, FileText, Eye, Trash2, Download } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -1362,13 +1362,67 @@ export default function EditVeiculoPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-3 gap-4">
-                <Button type="button" variant="outline">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const res = await apiClient.get(`/vehicles/${id}/documents/contrato`, { responseType: 'blob' });
+                      const blob = (res as any).data as Blob;
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `Contrato_Venda_${form.plate || id}.docx`;
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                    } catch {
+                      alert('Erro ao gerar contrato. Verifique se a venda está salva.');
+                    }
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Contrato de Venda
                 </Button>
-                <Button type="button" variant="outline">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const res = await apiClient.get(`/vehicles/${id}/documents/termo`, { responseType: 'blob' });
+                      const blob = (res as any).data as Blob;
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `Termo_Garantia_${form.plate || id}.docx`;
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                    } catch {
+                      alert('Erro ao gerar termo. Verifique se a venda está salva.');
+                    }
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Termo de Garantia
                 </Button>
-                <Button type="button" variant="outline">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const res = await apiClient.get(`/vehicles/${id}/documents/recibo`, { responseType: 'blob' });
+                      const blob = (res as any).data as Blob;
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `Recibo_Venda_${form.plate || id}.docx`;
+                      a.click();
+                      window.URL.revokeObjectURL(url);
+                    } catch {
+                      alert('Erro ao gerar recibo. Verifique se a venda está salva.');
+                    }
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
                   Recibo de Venda
                 </Button>
               </div>

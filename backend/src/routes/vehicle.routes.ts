@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { vehicleController } from '../controllers/vehicle.controller';
 import { vehicleSaleController } from '../controllers/vehicle-sale.controller';
+import { documentController } from '../controllers/document.controller';
 import { authMiddleware, adminOnly } from '../middleware';
 import { upload } from '../middleware/upload';
 
@@ -22,5 +23,8 @@ router.get('/:vehicleId/sale', authMiddleware, vehicleSaleController.getByVehicl
 router.post('/:vehicleId/sale', authMiddleware, upload.any(), vehicleSaleController.create);
 router.put('/sale/:id', authMiddleware, upload.any(), vehicleSaleController.update);
 router.delete('/sale/:id', authMiddleware, vehicleSaleController.delete);
+
+// Rotas de documentos
+router.get('/:vehicleId/documents/:type', authMiddleware, documentController.generate);
 
 export default router;

@@ -2,10 +2,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 interface ApiOptions extends RequestInit {
   skipAuth?: boolean;
+  responseType?: 'json' | 'blob';
 }
 
 async function api<T = unknown>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { skipAuth = false, headers: customHeaders, ...rest } = options;
+  const { skipAuth = false, headers: customHeaders, responseType, ...rest } = options;
 
   const headers: Record<string, string> = {
     ...(customHeaders as Record<string, string>),
@@ -40,6 +41,11 @@ async function api<T = unknown>(endpoint: string, options: ApiOptions = {}): Pro
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
     throw new Error(error.message || `Erro ${response.status}`);
+  }
+
+  if (responseType === 'blob') {
+    const blob = await response.blob();
+    return { data: blob } as unknown as T;
   }
 
   return response.json();
