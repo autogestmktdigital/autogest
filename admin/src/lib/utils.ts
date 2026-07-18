@@ -51,6 +51,7 @@ export const leadStatusLabels: Record<string, string> = {
   converted: 'Convertido',
   gave_up: 'Desistiu',
   invalid: 'Indevido',
+  no_return: 'Sem Retorno',
   // Status antigos (compatibilidade)
   new_lead: 'Novo',
   contacted: 'Em Conversa',
@@ -66,6 +67,7 @@ export const leadStatusColors: Record<string, string> = {
   converted: 'success',
   gave_up: 'danger',
   invalid: 'danger',
+  no_return: 'secondary',
   // Status antigos (compatibilidade)
   new_lead: 'info',
   contacted: 'warning',

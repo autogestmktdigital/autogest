@@ -145,6 +145,7 @@ export default function LeadsPage() {
             <option value="converted">Convertido</option>
             <option value="gave_up">Desistiu</option>
             <option value="invalid">Indevido</option>
+            <option value="no_return">Sem Retorno</option>
           </Select>
           <Select
             value={channelFilter}

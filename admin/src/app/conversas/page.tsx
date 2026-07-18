@@ -57,6 +57,8 @@ export default function ConversasPage() {
   const [phoneFilter, setPhoneFilter] = useState('');
   const [sellerFilter, setSellerFilter] = useState('');
   const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [closeStatus, setCloseStatus] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedConversation = conversations.find((c) => c.id === selectedId);
@@ -176,14 +178,21 @@ export default function ConversasPage() {
   }
 
   async function handleClose() {
-    if (!selectedId) return;
+    if (!selectedId || !closeStatus) return;
     try {
+      // Atualizar status do lead
+      await apiClient.patch(`/leads/${selectedConversation?.lead?.id}/status`, {
+        status: closeStatus,
+      });
+      // Fechar conversa
       await apiClient.patch(`/conversations/${selectedId}/close`);
+      setShowCloseDialog(false);
+      setCloseStatus('');
       setSelectedId(null);
       setMessages([]);
       fetchConversations();
-    } catch {
-      // Error handled by api client
+    } catch (err: any) {
+      alert(err?.message || 'Erro ao encerrar conversa');
     }
   }
 
@@ -328,7 +337,7 @@ export default function ConversasPage() {
                       Assumir
                     </Button>
                   )}
-                  <Button variant="outline" size="sm" onClick={handleClose}>
+                  <Button variant="outline" size="sm" onClick={() => setShowCloseDialog(true)}>
                     <XCircle className="h-4 w-4" />
                     Encerrar
                   </Button>
@@ -410,6 +419,64 @@ export default function ConversasPage() {
                   </div>
                 )}
               </div>
+
+              {/* Dialog de encerramento */}
+              {showCloseDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                  <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Encerrar Conversa
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Selecione o status final do lead antes de encerrar:
+                    </p>
+                    <div className="space-y-2 mb-6">
+                      {[
+                        { value: 'converted', label: 'Convertido' },
+                        { value: 'gave_up', label: 'Rejeitado' },
+                        { value: 'invalid', label: 'Indevido' },
+                        { value: 'no_return', label: 'Sem Retorno' },
+                      ].map((option) => (
+                        <label
+                          key={option.value}
+                          className={`flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors ${
+                            closeStatus === option.value
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="closeStatus"
+                            value={option.value}
+                            checked={closeStatus === option.value}
+                            onChange={(e) => setCloseStatus(e.target.value)}
+                            className="h-4 w-4 text-blue-600"
+                          />
+                          <span className="text-sm font-medium text-gray-900">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowCloseDialog(false);
+                          setCloseStatus('');
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        onClick={handleClose}
+                        disabled={!closeStatus}
+                      >
+                        Confirmar Encerramento
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center text-gray-500">

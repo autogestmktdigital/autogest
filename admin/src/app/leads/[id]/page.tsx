@@ -394,6 +394,7 @@ export default function LeadDetailPage() {
               <option value="converted">Convertido</option>
               <option value="gave_up">Desistiu</option>
               <option value="invalid">Indevido</option>
+              <option value="no_return">Sem Retorno</option>
             </Select>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowStatusDialog(false)}>Cancelar</Button>
