@@ -78,7 +78,7 @@ export default function LeadsPage() {
   useEffect(() => {
     async function fetchSellers() {
       try {
-        const res = await apiClient.get<{ data: Array<{ id: number; name: string }> }>('/users');
+        const res = await apiClient.get<{ success: boolean; data: Array<{ id: number; name: string }> }>('/auth/users');
         setSellers(res.data || []);
       } catch {
         setSellers([]);
@@ -90,7 +90,7 @@ export default function LeadsPage() {
   useEffect(() => {
     fetchLeads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, statusFilter, channelFilter, sellerFilter]);
+  }, [page, statusFilter, channelFilter, sellerFilter, phoneFilter]);
 
   function handleSearch() {
     setPage(1);
