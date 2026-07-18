@@ -33,6 +33,8 @@ interface Lead {
   interestNotes: string;
   assignedTo?: { id: number; name: string };
   createdAt: string;
+  updatedAt: string;
+  lastInteractionAt?: string;
   conversations?: Conversation[];
   followUps?: FollowUp[];
   financingSimulations?: FinancingSimulation[];
@@ -234,6 +236,13 @@ export default function LeadDetailPage() {
                   <p className="text-sm font-medium">{formatDate(lead.createdAt)}</p>
                 </div>
               </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-500">Última Interação</p>
+                  <p className="text-sm font-medium">{lead.lastInteractionAt ? formatDate(lead.lastInteractionAt) : '—'}</p>
+                </div>
+              </div>
               {lead.interestNotes && (
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Notas de Interesse</p>
@@ -352,12 +361,11 @@ export default function LeadDetailPage() {
         <Dialog open={showStatusDialog} onClose={() => setShowStatusDialog(false)} title="Alterar Status">
           <div className="space-y-4">
             <Select label="Novo Status" value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-              <option value="new">Novo</option>
-              <option value="contacted">Contatado</option>
-              <option value="qualified">Qualificado</option>
+              <option value="in_conversation">Em Conversa</option>
               <option value="negotiating">Negociando</option>
               <option value="converted">Convertido</option>
-              <option value="lost">Perdido</option>
+              <option value="gave_up">Desistiu</option>
+              <option value="invalid">Indevido</option>
             </Select>
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={() => setShowStatusDialog(false)}>Cancelar</Button>

@@ -58,6 +58,10 @@ export const leadController = {
     try {
       const id = Number(req.params.id);
       const { status } = req.body;
+      // Bloquear status automáticos do sistema
+      if (status === 'bot' || status === 'new') {
+        return res.status(400).json({ success: false, message: 'Status automático do sistema não pode ser definido manualmente' });
+      }
       const lead = await leadService.updateStatus(id, status);
 
       return res.json({ success: true, data: lead });

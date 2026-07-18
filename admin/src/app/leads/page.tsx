@@ -29,6 +29,8 @@ interface Lead {
   status: string;
   assignedTo?: { name: string };
   createdAt: string;
+  updatedAt: string;
+  lastInteractionAt?: string;
 }
 
 interface LeadsResponse {
@@ -97,15 +99,16 @@ export default function LeadsPage() {
           <Select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="w-full sm:w-40"
+            className="w-full sm:w-44"
           >
             <option value="">Todos Status</option>
+            <option value="bot">Bot</option>
             <option value="new">Novo</option>
-            <option value="contacted">Contatado</option>
-            <option value="qualified">Qualificado</option>
+            <option value="in_conversation">Em Conversa</option>
             <option value="negotiating">Negociando</option>
             <option value="converted">Convertido</option>
-            <option value="lost">Perdido</option>
+            <option value="gave_up">Desistiu</option>
+            <option value="invalid">Indevido</option>
           </Select>
           <Select
             value={channelFilter}
@@ -130,7 +133,8 @@ export default function LeadsPage() {
                 <TableHead>Canal</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Vendedor</TableHead>
-                <TableHead>Data</TableHead>
+                <TableHead>Data Criação</TableHead>
+                <TableHead>Última Interação</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -147,7 +151,7 @@ export default function LeadsPage() {
                 ))
               ) : leads.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                     Nenhum lead encontrado
                   </TableCell>
                 </TableRow>
@@ -172,6 +176,7 @@ export default function LeadsPage() {
                     </TableCell>
                     <TableCell>{lead.assignedTo?.name || '—'}</TableCell>
                     <TableCell>{formatDate(lead.createdAt)}</TableCell>
+                    <TableCell>{lead.lastInteractionAt ? formatDate(lead.lastInteractionAt) : '—'}</TableCell>
                     <TableCell>
                       <Link href={`/leads/${lead.id}`}>
                         <Button variant="ghost" size="sm">

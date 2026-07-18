@@ -95,7 +95,7 @@ export class LeadService {
           channelUserId: data.channelUserId,
           name: data.name,
           phone: data.phone,
-          status: 'new_lead',
+          status: 'bot',
         },
       });
     }
@@ -115,7 +115,7 @@ export class LeadService {
   async assignToSeller(id: number, sellerId: number) {
     return this.update(id, {
       assignedTo: { connect: { id: sellerId } },
-      status: 'contacted' as LeadStatus,
+      status: 'in_conversation' as LeadStatus,
     });
   }
 

@@ -44,21 +44,23 @@ export function formatPhone(phone: string): string {
 }
 
 export const leadStatusLabels: Record<string, string> = {
+  bot: 'Bot',
   new: 'Novo',
-  contacted: 'Contatado',
-  qualified: 'Qualificado',
+  in_conversation: 'Em Conversa',
   negotiating: 'Negociando',
   converted: 'Convertido',
-  lost: 'Perdido',
+  gave_up: 'Desistiu',
+  invalid: 'Indevido',
 };
 
 export const leadStatusColors: Record<string, string> = {
+  bot: 'default',
   new: 'info',
-  contacted: 'warning',
-  qualified: 'success',
+  in_conversation: 'warning',
   negotiating: 'warning',
   converted: 'success',
-  lost: 'danger',
+  gave_up: 'danger',
+  invalid: 'danger',
 };
 
 export const vehicleStatusLabels: Record<string, string> = {
