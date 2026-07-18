@@ -51,6 +51,11 @@ export const leadStatusLabels: Record<string, string> = {
   converted: 'Convertido',
   gave_up: 'Desistiu',
   invalid: 'Indevido',
+  // Status antigos (compatibilidade)
+  new_lead: 'Novo',
+  contacted: 'Em Conversa',
+  qualified: 'Negociando',
+  lost: 'Desistiu',
 };
 
 export const leadStatusColors: Record<string, string> = {
@@ -61,6 +66,11 @@ export const leadStatusColors: Record<string, string> = {
   converted: 'success',
   gave_up: 'danger',
   invalid: 'danger',
+  // Status antigos (compatibilidade)
+  new_lead: 'info',
+  contacted: 'warning',
+  qualified: 'warning',
+  lost: 'danger',
 };
 
 export const vehicleStatusLabels: Record<string, string> = {
