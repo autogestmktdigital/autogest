@@ -19,8 +19,8 @@ router.delete('/:id/expenses/:expenseId', authMiddleware, vehicleController.remo
 
 // Rotas de venda do veículo
 router.get('/:vehicleId/sale', authMiddleware, vehicleSaleController.getByVehicleId);
-router.post('/:vehicleId/sale', authMiddleware, vehicleSaleController.create);
-router.put('/sale/:id', authMiddleware, vehicleSaleController.update);
+router.post('/:vehicleId/sale', authMiddleware, upload.any(), vehicleSaleController.create);
+router.put('/sale/:id', authMiddleware, upload.any(), vehicleSaleController.update);
 router.delete('/sale/:id', authMiddleware, vehicleSaleController.delete);
 
 export default router;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent, type ChangeEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Upload, X, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Upload, X, ChevronDown, FileText, Eye, Trash2 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,6 +113,8 @@ export default function EditVeiculoPage() {
     sellerName: '',
   });
   const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
+  const [clientDocumentsFiles, setClientDocumentsFiles] = useState<File[]>([]);
+  const [clientDocumentsPreviews, setClientDocumentsPreviews] = useState<string[]>([]);
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [existingReportFile, setExistingReportFile] = useState<string | null>(null);
@@ -303,6 +305,35 @@ export default function EditVeiculoPage() {
       setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
     } catch {
       // Error handled by api client
+    }
+  }
+
+  function handleClientDocumentChange(e: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (clientDocumentsFiles.length + files.length > 6) {
+      alert('Limite máximo de 6 documentos atingido');
+      return;
+    }
+    setClientDocumentsFiles((prev) => [...prev, ...files]);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setClientDocumentsPreviews((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function removeClientDocument(index: number) {
+    setClientDocumentsFiles((prev) => prev.filter((_, i) => i !== index));
+    setClientDocumentsPreviews((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function openClientDocument(index: number) {
+    const file = clientDocumentsFiles[index];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      window.open(url, '_blank');
     }
   }
 
@@ -997,6 +1028,66 @@ export default function EditVeiculoPage() {
                 placeholder="Rua/Av, Número, Bairro, Cidade, Estado, CEP"
                 rows={2}
               />
+
+              {/* Anexar Documentos */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">Anexar Documentos (máx. 6)</p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    id="client-documents"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={handleClientDocumentChange}
+                    className="hidden"
+                    disabled={clientDocumentsFiles.length >= 6}
+                  />
+                  <label
+                    htmlFor="client-documents"
+                    className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${clientDocumentsFiles.length >= 6 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Anexar Documento
+                  </label>
+                  <span className="text-xs text-gray-500">
+                    {clientDocumentsFiles.length}/6 documentos
+                  </span>
+                </div>
+
+                {clientDocumentsFiles.length > 0 && (
+                  <div className="space-y-2">
+                    {clientDocumentsFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between rounded-lg border border-gray-200 p-3">
+                        <div className="flex items-center gap-3">
+                          <FileText className="h-5 w-5 text-gray-400" />
+                          <div>
+                            <p className="text-sm font-medium">{file.name}</p>
+                            <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openClientDocument(index)}
+                            className="rounded-lg p-2 text-blue-600 hover:bg-blue-50 cursor-pointer"
+                            title="Abrir"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removeClientDocument(index)}
+                            className="rounded-lg p-2 text-red-600 hover:bg-red-50 cursor-pointer"
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
 
@@ -1264,21 +1355,23 @@ export default function EditVeiculoPage() {
             </CardContent>
           </Card>
 
-          {/* Seção 6 - Download dos Contratos */}
+          {/* Seção 6 - Emitir Documentação */}
           <Card>
             <CardHeader>
-              <CardTitle>6. Download dos Contratos</CardTitle>
+              <CardTitle>6. Emitir Documentação</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Button type="button" variant="outline" className="w-full">
-                Contrato de Venda
-              </Button>
-              <Button type="button" variant="outline" className="w-full">
-                Termo de Garantia
-              </Button>
-              <Button type="button" variant="outline" className="w-full">
-                Recibo de Venda
-              </Button>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-4">
+                <Button type="button" variant="outline">
+                  Contrato de Venda
+                </Button>
+                <Button type="button" variant="outline">
+                  Termo de Garantia
+                </Button>
+                <Button type="button" variant="outline">
+                  Recibo de Venda
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -1288,42 +1381,46 @@ export default function EditVeiculoPage() {
               onClick={async () => {
                 try {
                   setLoading(true);
-                  const payload = {
-                    vehicleId: Number(id),
-                    salePrice: Number(saleData.salePrice.replace(',', '.')),
-                    saleDate: saleData.saleDate,
-                    clientName: saleData.clientName,
-                    clientRg: saleData.clientRg,
-                    clientCpfCnpj: saleData.clientCpfCnpj,
-                    clientPhone: saleData.clientPhone,
-                    clientEmail: saleData.clientEmail,
-                    clientAddress: saleData.clientAddress,
-                    paymentMethod: saleData.paymentMethod,
-                    downPayment: saleData.downPayment ? Number(saleData.downPayment.replace(',', '.')) : null,
-                    financeCompany: saleData.financeCompany,
-                    financeDate: saleData.financeDate,
-                    financedAmount: saleData.financedAmount ? Number(saleData.financedAmount.replace(',', '.')) : null,
-                    installments: saleData.installments ? Number(saleData.installments) : null,
-                    installmentValue: saleData.installmentValue ? Number(saleData.installmentValue.replace(',', '.')) : null,
-                    hasTradeIn: saleData.hasTradeIn,
-                    tradeInBrand: saleData.tradeInBrand,
-                    tradeInModel: saleData.tradeInModel,
-                    tradeInVersion: saleData.tradeInVersion,
-                    tradeInPlate: saleData.tradeInPlate,
-                    tradeInYear: saleData.tradeInYear ? Number(saleData.tradeInYear) : null,
-                    tradeInModelYear: saleData.tradeInModelYear ? Number(saleData.tradeInModelYear) : null,
-                    tradeInFuel: saleData.tradeInFuel,
-                    tradeInChassis: saleData.tradeInChassis,
-                    tradeInRenavam: saleData.tradeInRenavam,
-                    tradeInPurchasePrice: saleData.tradeInPurchasePrice ? Number(saleData.tradeInPurchasePrice.replace(',', '.')) : null,
-                    tradeInDebts: saleData.tradeInDebts ? Number(saleData.tradeInDebts.replace(',', '.')) : null,
-                    tradeInDebtsNotes: saleData.tradeInDebtsNotes,
-                    tradeInNetValue: saleData.tradeInNetValue ? Number(saleData.tradeInNetValue.replace(',', '.')) : null,
-                    documentationNotes: saleData.documentationNotes,
-                    sellerId: saleData.sellerId ? Number(saleData.sellerId) : null,
-                    sellerName: saleData.sellerName,
-                  };
-                  await apiClient.post(`/vehicles/${id}/sale`, payload);
+                  const formData = new FormData();
+                  formData.append('vehicleId', String(id));
+                  formData.append('salePrice', saleData.salePrice.replace(',', '.'));
+                  formData.append('saleDate', saleData.saleDate);
+                  formData.append('clientName', saleData.clientName);
+                  formData.append('clientRg', saleData.clientRg);
+                  formData.append('clientCpfCnpj', saleData.clientCpfCnpj);
+                  formData.append('clientPhone', saleData.clientPhone);
+                  if (saleData.clientEmail) formData.append('clientEmail', saleData.clientEmail);
+                  if (saleData.clientAddress) formData.append('clientAddress', saleData.clientAddress);
+                  formData.append('paymentMethod', saleData.paymentMethod);
+                  if (saleData.downPayment) formData.append('downPayment', saleData.downPayment.replace(',', '.'));
+                  if (saleData.financeCompany) formData.append('financeCompany', saleData.financeCompany);
+                  if (saleData.financeDate) formData.append('financeDate', saleData.financeDate);
+                  if (saleData.financedAmount) formData.append('financedAmount', saleData.financedAmount.replace(',', '.'));
+                  if (saleData.installments) formData.append('installments', saleData.installments);
+                  if (saleData.installmentValue) formData.append('installmentValue', saleData.installmentValue.replace(',', '.'));
+                  formData.append('hasTradeIn', String(saleData.hasTradeIn));
+                  if (saleData.tradeInBrand) formData.append('tradeInBrand', saleData.tradeInBrand);
+                  if (saleData.tradeInModel) formData.append('tradeInModel', saleData.tradeInModel);
+                  if (saleData.tradeInVersion) formData.append('tradeInVersion', saleData.tradeInVersion);
+                  if (saleData.tradeInPlate) formData.append('tradeInPlate', saleData.tradeInPlate);
+                  if (saleData.tradeInYear) formData.append('tradeInYear', saleData.tradeInYear);
+                  if (saleData.tradeInModelYear) formData.append('tradeInModelYear', saleData.tradeInModelYear);
+                  if (saleData.tradeInFuel) formData.append('tradeInFuel', saleData.tradeInFuel);
+                  if (saleData.tradeInChassis) formData.append('tradeInChassis', saleData.tradeInChassis);
+                  if (saleData.tradeInRenavam) formData.append('tradeInRenavam', saleData.tradeInRenavam);
+                  if (saleData.tradeInPurchasePrice) formData.append('tradeInPurchasePrice', saleData.tradeInPurchasePrice.replace(',', '.'));
+                  if (saleData.tradeInDebts) formData.append('tradeInDebts', saleData.tradeInDebts.replace(',', '.'));
+                  if (saleData.tradeInDebtsNotes) formData.append('tradeInDebtsNotes', saleData.tradeInDebtsNotes);
+                  if (saleData.tradeInNetValue) formData.append('tradeInNetValue', saleData.tradeInNetValue.replace(',', '.'));
+                  if (saleData.documentationNotes) formData.append('documentationNotes', saleData.documentationNotes);
+                  if (saleData.sellerId) formData.append('sellerId', saleData.sellerId);
+                  if (saleData.sellerName) formData.append('sellerName', saleData.sellerName);
+
+                  clientDocumentsFiles.forEach((file) => {
+                    formData.append('clientDocuments', file);
+                  });
+
+                  await apiClient.post(`/vehicles/${id}/sale`, formData);
                   alert('Venda registrada com sucesso!');
                 } catch (err: any) {
                   alert(err?.response?.data?.message || 'Erro ao registrar venda');
