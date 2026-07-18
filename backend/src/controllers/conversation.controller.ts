@@ -63,6 +63,19 @@ export const conversationController = {
     }
   },
 
+  async assignConversation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = Number(req.params.id);
+      const { userId, userName } = req.body;
+
+      const conversation = await conversationService.assignConversation(id, userId, userName);
+
+      return res.json({ success: true, data: conversation });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async closeConversation(req: Request, res: Response, next: NextFunction) {
     try {
       const id = Number(req.params.id);

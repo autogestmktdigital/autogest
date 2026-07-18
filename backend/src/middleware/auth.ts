@@ -5,6 +5,7 @@ import { AppError } from '../utils/AppError';
 
 export interface AuthPayload {
   userId: number;
+  name: string;
   email: string;
   role: 'admin' | 'seller';
 }

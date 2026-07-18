@@ -26,10 +26,21 @@ export class ConversationService {
       data: { conversationId, role, content, mediaUrl },
     });
 
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { lastMessageAt: new Date() },
-    });
+    // Incrementar contador de não lidas se for mensagem do cliente
+    if (role === 'customer') {
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          lastMessageAt: new Date(),
+          unreadCount: { increment: 1 },
+        },
+      });
+    } else {
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { lastMessageAt: new Date() },
+      });
+    }
 
     return message;
   }
@@ -47,6 +58,12 @@ export class ConversationService {
       prisma.message.count({ where: { conversationId } }),
     ]);
 
+    // Zerar contador de não lidas ao visualizar mensagens
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { unreadCount: 0 },
+    });
+
     return { data: messages, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
   }
 
@@ -60,10 +77,26 @@ export class ConversationService {
     });
   }
 
-  async closeConversation(conversationId: number) {
+  async assignConversation(conversationId: number, userId: number, userName: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: { lead: true },
+    });
+    if (!conversation) throw new AppError('Conversa não encontrada', 404);
+
+    // Atualizar lead com o vendedor e status
+    await prisma.lead.update({
+      where: { id: conversation.leadId },
+      data: {
+        assignedToId: userId,
+        status: 'in_conversation',
+      },
+    });
+
+    // Ativar handoff (bot desligado)
     return prisma.conversation.update({
       where: { id: conversationId },
-      data: { status: 'closed' },
+      data: { isHumanHandoff: true },
     });
   }
 
@@ -81,10 +114,20 @@ export class ConversationService {
     return prisma.conversation.findMany({
       where: { status: 'active' },
       include: {
-        lead: { select: { id: true, name: true, phone: true, channel: true } },
+        lead: { select: { id: true, name: true, phone: true, channel: true, status: true, assignedTo: { select: { id: true, name: true } } } },
         _count: { select: { messages: true } },
       },
-      orderBy: { lastMessageAt: 'desc' },
+      orderBy: [
+        { unreadCount: 'desc' },
+        { lastMessageAt: 'desc' },
+      ],
+    });
+  }
+
+  async closeConversation(conversationId: number) {
+    return prisma.conversation.update({
+      where: { id: conversationId },
+      data: { status: 'closed' },
     });
   }
 }

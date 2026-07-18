@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Send, PhoneForwarded, XCircle } from 'lucide-react';
+import { Send, PhoneForwarded, XCircle, Lock } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import apiClient from '@/lib/api';
-import { cn, formatDateTime, channelLabels, channelColors } from '@/lib/utils';
+import { cn, formatDateTime, channelLabels, channelColors, leadStatusLabels, leadStatusColors } from '@/lib/utils';
 
 interface Conversation {
   id: number;
@@ -15,10 +15,15 @@ interface Conversation {
   status: string;
   humanHandoff: boolean;
   lastMessageAt: string;
+  unreadCount: number;
+  assignedToId?: number;
+  assignedToName?: string;
   lead: {
     id: number;
     name: string;
     phone: string;
+    status?: string;
+    assignedTo?: { id: number; name: string };
   };
   messages?: Message[];
 }
@@ -41,15 +46,49 @@ interface MessagesResponse {
 
 export default function ConversasPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [filteredConversations, setFilteredConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ id: number; name: string; role: string } | null>(null);
+  const [phoneFilter, setPhoneFilter] = useState('');
+  const [sellerFilter, setSellerFilter] = useState('');
+  const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedConversation = conversations.find((c) => c.id === selectedId);
+  const canRespond =
+    selectedConversation?.lead?.status === 'in_conversation' &&
+    (currentUser?.role === 'admin' ||
+      selectedConversation?.lead?.assignedTo?.id === currentUser?.id ||
+      !selectedConversation?.lead?.assignedTo);
+
+  useEffect(() => {
+    const userStr = sessionStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setCurrentUser({ id: user.userId || user.id, name: user.name, role: user.role });
+      } catch {
+        setCurrentUser(null);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    async function fetchSellers() {
+      try {
+        const res = await apiClient.get<{ success: boolean; data: Array<{ id: number; name: string }> }>('/auth/users');
+        setSellers(res.data || []);
+      } catch {
+        setSellers([]);
+      }
+    }
+    fetchSellers();
+  }, []);
 
   useEffect(() => {
     fetchConversations();
@@ -62,6 +101,18 @@ export default function ConversasPage() {
   }, [selectedId]);
 
   useEffect(() => {
+    // Aplicar filtros
+    let filtered = conversations;
+    if (phoneFilter) {
+      filtered = filtered.filter((c) => c.lead?.phone?.includes(phoneFilter));
+    }
+    if (sellerFilter) {
+      filtered = filtered.filter((c) => String(c.lead?.assignedTo?.id) === sellerFilter);
+    }
+    setFilteredConversations(filtered);
+  }, [conversations, phoneFilter, sellerFilter]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -69,9 +120,7 @@ export default function ConversasPage() {
     try {
       const res = await apiClient.get<{ success: boolean; data: Conversation[] }>('/conversations/active');
       setConversations(res.data || []);
-      if (res.data?.length > 0 && !selectedId) {
-        setSelectedId(res.data[0].id);
-      }
+      // Não selecionar automaticamente para não zerar contador de não lidas
     } catch {
       setConversations([]);
     } finally {
@@ -84,6 +133,8 @@ export default function ConversasPage() {
     try {
       const res = await apiClient.get<MessagesResponse>(`/conversations/${convId}/messages?limit=100`);
       setMessages(res.data || []);
+      // Atualizar lista de conversas para remover badge de não lidas
+      fetchConversations();
     } catch {
       setMessages([]);
     } finally {
@@ -108,15 +159,19 @@ export default function ConversasPage() {
     }
   }
 
-  async function handleHandoff() {
-    if (!selectedId || !selectedConversation) return;
+  async function handleAssign() {
+    if (!selectedId || !selectedConversation || !currentUser) return;
+    console.log('Assigning conversation', selectedId, 'to user', currentUser.id, currentUser.name);
     try {
-      await apiClient.patch(`/conversations/${selectedId}/handoff`, {
-        isHandoff: !selectedConversation.humanHandoff,
+      const res = await apiClient.patch(`/conversations/${selectedId}/assign`, {
+        userId: currentUser.id,
+        userName: currentUser.name,
       });
+      console.log('Assign response:', res);
       fetchConversations();
-    } catch {
-      // Error handled by api client
+    } catch (err: any) {
+      console.error('Assign error:', err);
+      alert(err?.message || 'Erro ao assumir conversa');
     }
   }
 
@@ -137,18 +192,36 @@ export default function ConversasPage() {
       <Header title="Conversas" onMenuToggle={() => {}} />
       <div className="flex h-[calc(100vh-8rem)] lg:h-[calc(100vh-4rem)]">
         {/* Conversation list */}
-        <div className="w-full border-r border-gray-200 bg-white sm:w-80 lg:w-96">
-          <div className="h-full overflow-y-auto">
+        <div className="w-full border-r border-gray-200 bg-white sm:w-80 lg:w-96 flex flex-col">
+          <div className="p-3 border-b border-gray-200 space-y-2">
+            <Input
+              placeholder="Filtrar por telefone..."
+              value={phoneFilter}
+              onChange={(e) => setPhoneFilter(e.target.value)}
+              className="text-sm"
+            />
+            <select
+              value={sellerFilter}
+              onChange={(e) => setSellerFilter(e.target.value)}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todos Vendedores</option>
+              {sellers.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center p-8">
                 <div className="h-6 w-6 animate-spin rounded-full border-3 border-blue-600 border-t-transparent" />
               </div>
-            ) : conversations.length === 0 ? (
+            ) : filteredConversations.length === 0 ? (
               <div className="p-8 text-center text-sm text-gray-500">
                 Nenhuma conversa ativa
               </div>
             ) : (
-              conversations.map((conv) => (
+              filteredConversations.map((conv) => (
                 <button
                   key={conv.id}
                   onClick={() => setSelectedId(conv.id)}
@@ -161,16 +234,42 @@ export default function ConversasPage() {
                     <span className="text-sm font-medium text-gray-900 truncate">
                       {conv.lead?.name || 'Sem nome'}
                     </span>
-                    <Badge
-                      variant={channelColors[conv.channel] as 'success' | 'danger' | 'info' | 'default'}
-                      className="text-[10px] ml-2"
-                    >
-                      {channelLabels[conv.channel] || conv.channel}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {conv.unreadCount > 0 && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                      <Badge
+                        variant={channelColors[conv.channel] as 'success' | 'danger' | 'info' | 'default'}
+                        className="text-[10px] ml-1"
+                      >
+                        {channelLabels[conv.channel] || conv.channel}
+                      </Badge>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-500 truncate">
                     {conv.lead?.phone}
                   </p>
+                  <div className="mt-1 flex items-center gap-2 flex-wrap">
+                    {conv.lead?.status && (
+                      <Badge
+                        variant={leadStatusColors[conv.lead.status] as 'success' | 'warning' | 'danger' | 'info'}
+                        className="text-[10px]"
+                      >
+                        {leadStatusLabels[conv.lead.status] || conv.lead.status}
+                      </Badge>
+                    )}
+                    {conv.lead?.assignedTo ? (
+                      <Badge variant="default" className="text-[10px]">
+                        {conv.lead.assignedTo.name}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Sem vendedor
+                      </Badge>
+                    )}
+                  </div>
                   <p className="mt-1 text-xs text-gray-400">
                     {formatDateTime(conv.lastMessageAt)}
                   </p>
@@ -198,16 +297,37 @@ export default function ConversasPage() {
                   <p className="text-xs text-gray-500">
                     {selectedConversation?.lead?.phone}
                   </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    {selectedConversation?.lead?.status && (
+                      <Badge
+                        variant={leadStatusColors[selectedConversation.lead.status] as 'success' | 'warning' | 'danger' | 'info'}
+                        className="text-[10px]"
+                      >
+                        {leadStatusLabels[selectedConversation.lead.status] || selectedConversation.lead.status}
+                      </Badge>
+                    )}
+                    {selectedConversation?.lead?.assignedTo ? (
+                      <Badge variant="default" className="text-[10px]">
+                        {selectedConversation.lead.assignedTo.name}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px]">
+                        Sem vendedor
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant={selectedConversation?.humanHandoff ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={handleHandoff}
-                  >
-                    <PhoneForwarded className="h-4 w-4" />
-                    {selectedConversation?.humanHandoff ? 'Bot ativo' : 'Assumir'}
-                  </Button>
+                  {selectedConversation?.lead?.status === 'new' && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleAssign}
+                    >
+                      <PhoneForwarded className="h-4 w-4" />
+                      Assumir
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" onClick={handleClose}>
                     <XCircle className="h-4 w-4" />
                     Encerrar
@@ -270,18 +390,25 @@ export default function ConversasPage() {
 
               {/* Message input */}
               <div className="border-t border-gray-200 bg-white p-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Digite uma mensagem..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-                    disabled={sending}
-                  />
-                  <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+                {!canRespond ? (
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-500 py-2">
+                    <Lock className="h-4 w-4" />
+                    Esta conversa está atribuída a outro vendedor
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Digite uma mensagem..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
+                      disabled={sending}
+                    />
+                    <Button onClick={handleSendMessage} disabled={sending || !newMessage.trim()}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </>
           ) : (

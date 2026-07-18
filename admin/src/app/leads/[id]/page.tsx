@@ -91,6 +91,19 @@ export default function LeadDetailPage() {
   const [newStatus, setNewStatus] = useState('');
   const [sellers, setSellers] = useState<UserItem[]>([]);
   const [selectedSeller, setSelectedSeller] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const userStr = sessionStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setIsAdmin(user.role === 'admin');
+      } catch {
+        setIsAdmin(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -101,7 +114,20 @@ export default function LeadDetailPage() {
         ]);
         setLead(leadRes.data);
         setNewStatus(leadRes.data.status);
-        setConversations(convsRes.data || []);
+
+        // Buscar mensagens de cada conversa
+        const convs = convsRes.data || [];
+        const convsWithMessages = await Promise.all(
+          convs.map(async (conv) => {
+            try {
+              const msgRes = await apiClient.get<{ success: boolean; data: Message[] }>(`/conversations/${conv.id}/messages`);
+              return { ...conv, messages: msgRes.data || [] };
+            } catch {
+              return { ...conv, messages: [] };
+            }
+          })
+        );
+        setConversations(convsWithMessages);
       } catch {
         router.push('/leads');
       } finally {
@@ -172,9 +198,11 @@ export default function LeadDetailPage() {
             <Button variant="outline" onClick={() => setShowStatusDialog(true)}>
               Alterar Status
             </Button>
-            <Button variant="outline" onClick={openAssignDialog}>
-              Atribuir Vendedor
-            </Button>
+            {isAdmin && (
+              <Button variant="outline" onClick={openAssignDialog}>
+                Atribuir Vendedor
+              </Button>
+            )}
           </div>
         </div>
 

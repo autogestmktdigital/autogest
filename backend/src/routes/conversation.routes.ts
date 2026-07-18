@@ -9,6 +9,7 @@ router.get('/lead/:leadId', authMiddleware, conversationController.listByLead);
 router.get('/:id/messages', authMiddleware, conversationController.getMessages);
 router.post('/:id/messages', authMiddleware, conversationController.addMessage);
 router.patch('/:id/handoff', authMiddleware, conversationController.setHumanHandoff);
+router.patch('/:id/assign', authMiddleware, conversationController.assignConversation);
 router.patch('/:id/close', authMiddleware, conversationController.closeConversation);
 
 export default router;

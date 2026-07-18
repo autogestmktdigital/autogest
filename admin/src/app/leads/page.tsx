@@ -36,9 +36,12 @@ interface Lead {
 interface LeadsResponse {
   success: boolean;
   data: Lead[];
-  total: number;
-  page: number;
-  totalPages: number;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export default function LeadsPage() {
@@ -67,7 +70,7 @@ export default function LeadsPage() {
 
       const res = await apiClient.get<LeadsResponse>(`/leads?${params.toString()}`);
       setLeads(res.data);
-      setTotalPages(res.totalPages || 1);
+      setTotalPages(res.pagination?.totalPages || 1);
     } catch {
       setLeads([]);
     } finally {
