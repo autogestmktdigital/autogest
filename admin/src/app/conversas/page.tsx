@@ -433,7 +433,7 @@ export default function ConversasPage() {
                     <div className="space-y-2 mb-6">
                       {[
                         { value: 'converted', label: 'Convertido' },
-                        { value: 'gave_up', label: 'Rejeitado' },
+                        { value: 'gave_up', label: 'Desistiu' },
                         { value: 'invalid', label: 'Indevido' },
                         { value: 'no_return', label: 'Sem Retorno' },
                       ].map((option) => (
