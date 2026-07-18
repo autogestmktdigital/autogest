@@ -73,14 +73,46 @@ export default function EditVeiculoPage() {
   const [expenses, setExpenses] = useState<Array<{ id: number; type: string; description: string; amount: number; date: string }>>([]);
   const [newExpense, setNewExpense] = useState({ type: 'mecanica', description: '', amount: '', date: '' });
   const [saleData, setSaleData] = useState({
+    // Seção 1 - Venda
     salePrice: '',
     saleDate: '',
-    buyerName: '',
-    buyerPhone: '',
-    buyerEmail: '',
+    // Seção 2 - Dados do Cliente
+    clientName: '',
+    clientRg: '',
+    clientCpfCnpj: '',
+    clientPhone: '',
+    clientEmail: '',
+    clientAddress: '',
+    clientDocuments: [] as string[],
+    // Seção 3 - Condições da Compra
     paymentMethod: 'cash',
-    notes: '',
+    downPayment: '',
+    financeCompany: '',
+    financeDate: '',
+    financedAmount: '',
+    installments: '',
+    installmentValue: '',
+    hasTradeIn: false,
+    tradeInBrand: '',
+    tradeInModel: '',
+    tradeInVersion: '',
+    tradeInPlate: '',
+    tradeInYear: '',
+    tradeInModelYear: '',
+    tradeInFuel: 'flex',
+    tradeInChassis: '',
+    tradeInRenavam: '',
+    tradeInPurchasePrice: '',
+    tradeInDebts: '',
+    tradeInDebtsNotes: '',
+    tradeInNetValue: '',
+    // Seção 4 - Documentação
+    documentationNotes: '',
+    // Seção 5 - Vendedor
+    sellerId: '',
+    sellerName: '',
   });
+  const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [existingReportFile, setExistingReportFile] = useState<string | null>(null);
@@ -146,6 +178,68 @@ export default function EditVeiculoPage() {
     }
     fetchVehicle();
   }, [id, router]);
+
+  useEffect(() => {
+    async function fetchSellers() {
+      try {
+        const res = await apiClient.get<{ data: Array<{ id: number; name: string }> }>('/users');
+        setSellers(res.data || []);
+      } catch {
+        // ignore
+      }
+    }
+    fetchSellers();
+  }, []);
+
+  useEffect(() => {
+    async function fetchSale() {
+      if (activeTab !== 'sale') return;
+      try {
+        const res = await apiClient.get<{ data: any }>(`/vehicles/${id}/sale`);
+        if (res.data) {
+          const s = res.data;
+          setSaleData({
+            salePrice: s.salePrice ? String(s.salePrice) : '',
+            saleDate: s.saleDate || '',
+            clientName: s.clientName || '',
+            clientRg: s.clientRg || '',
+            clientCpfCnpj: s.clientCpfCnpj || '',
+            clientPhone: s.clientPhone || '',
+            clientEmail: s.clientEmail || '',
+            clientAddress: s.clientAddress || '',
+            clientDocuments: s.clientDocuments ? JSON.parse(s.clientDocuments) : [],
+            paymentMethod: s.paymentMethod || 'cash',
+            downPayment: s.downPayment ? String(s.downPayment) : '',
+            financeCompany: s.financeCompany || '',
+            financeDate: s.financeDate || '',
+            financedAmount: s.financedAmount ? String(s.financedAmount) : '',
+            installments: s.installments ? String(s.installments) : '',
+            installmentValue: s.installmentValue ? String(s.installmentValue) : '',
+            hasTradeIn: s.hasTradeIn || false,
+            tradeInBrand: s.tradeInBrand || '',
+            tradeInModel: s.tradeInModel || '',
+            tradeInVersion: s.tradeInVersion || '',
+            tradeInPlate: s.tradeInPlate || '',
+            tradeInYear: s.tradeInYear ? String(s.tradeInYear) : '',
+            tradeInModelYear: s.tradeInModelYear ? String(s.tradeInModelYear) : '',
+            tradeInFuel: s.tradeInFuel || 'flex',
+            tradeInChassis: s.tradeInChassis || '',
+            tradeInRenavam: s.tradeInRenavam || '',
+            tradeInPurchasePrice: s.tradeInPurchasePrice ? String(s.tradeInPurchasePrice) : '',
+            tradeInDebts: s.tradeInDebts ? String(s.tradeInDebts) : '',
+            tradeInDebtsNotes: s.tradeInDebtsNotes || '',
+            tradeInNetValue: s.tradeInNetValue ? String(s.tradeInNetValue) : '',
+            documentationNotes: s.documentationNotes || '',
+            sellerId: s.sellerId ? String(s.sellerId) : '',
+            sellerName: s.sellerName || '',
+          });
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchSale();
+  }, [activeTab, id]);
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
@@ -825,70 +919,424 @@ export default function EditVeiculoPage() {
           )}
 
       {activeTab === 'sale' && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Venda Veículo</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="Preço de Venda (R$)"
-                    type="number"
-                    value={saleData.salePrice}
-                    onChange={(e) => setSaleData((prev) => ({ ...prev, salePrice: e.target.value }))}
-                    placeholder="0,00"
-                  />
-                  <Input
-                    label="Data da Venda"
-                    type="date"
-                    value={saleData.saleDate}
-                    onChange={(e) => setSaleData((prev) => ({ ...prev, saleDate: e.target.value }))}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="Nome do Comprador"
-                    value={saleData.buyerName}
-                    onChange={(e) => setSaleData((prev) => ({ ...prev, buyerName: e.target.value }))}
-                    placeholder="Nome completo"
-                  />
-                  <Input
-                    label="Telefone"
-                    value={saleData.buyerPhone}
-                    onChange={(e) => setSaleData((prev) => ({ ...prev, buyerPhone: e.target.value }))}
-                    placeholder="(11) 99999-9999"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="E-mail"
-                    type="email"
-                    value={saleData.buyerEmail}
-                    onChange={(e) => setSaleData((prev) => ({ ...prev, buyerEmail: e.target.value }))}
-                    placeholder="email@exemplo.com"
-                  />
-                  <Select
-                    label="Forma de Pagamento"
-                    value={saleData.paymentMethod}
-                    onChange={(e) => setSaleData((prev) => ({ ...prev, paymentMethod: e.target.value }))}
-                  >
-                    <option value="cash">À Vista</option>
-                    <option value="financed">Financiado</option>
-                    <option value="consortium">Consórcio</option>
-                    <option value="exchange">Troca + Dinheiro</option>
-                  </Select>
-                </div>
-                <Textarea
-                  label="Observações"
-                  value={saleData.notes}
-                  onChange={(e) => setSaleData((prev) => ({ ...prev, notes: e.target.value }))}
-                  placeholder="Observações sobre a venda..."
-                  rows={3}
+        <div className="space-y-6">
+          {/* Seção 1 - Venda */}
+          <Card>
+            <CardHeader>
+              <CardTitle>1. Venda</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Valor da Venda (R$) *"
+                  value={formatCurrencyDisplay(saleData.salePrice)}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\D/g, '');
+                    const numeric = raw ? Number(raw) / 100 : '';
+                    setSaleData((prev) => ({ ...prev, salePrice: numeric !== '' ? numeric.toFixed(2).replace('.', ',') : '' }));
+                  }}
+                  placeholder="R$ 0,00"
                 />
-                <Button type="button" className="w-full">Registrar Venda</Button>
-              </CardContent>
-            </Card>
-          )}
+                <Input
+                  label="Data da Venda *"
+                  type="date"
+                  value={saleData.saleDate}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, saleDate: e.target.value }))}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Seção 2 - Dados do Cliente */}
+          <Card>
+            <CardHeader>
+              <CardTitle>2. Dados do Cliente</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Nome do Cliente *"
+                  value={saleData.clientName}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientName: e.target.value }))}
+                  placeholder="Nome completo"
+                />
+                <Input
+                  label="RG *"
+                  value={saleData.clientRg}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientRg: e.target.value }))}
+                  placeholder="00.000.000-0"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="CPF/CNPJ *"
+                  value={saleData.clientCpfCnpj}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientCpfCnpj: e.target.value }))}
+                  placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                />
+                <Input
+                  label="Celular *"
+                  value={saleData.clientPhone}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientPhone: e.target.value }))}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="E-mail"
+                  type="email"
+                  value={saleData.clientEmail}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientEmail: e.target.value }))}
+                  placeholder="email@exemplo.com"
+                />
+              </div>
+              <Textarea
+                label="Endereço Completo"
+                value={saleData.clientAddress}
+                onChange={(e) => setSaleData((prev) => ({ ...prev, clientAddress: e.target.value }))}
+                placeholder="Rua/Av, Número, Bairro, Cidade, Estado, CEP"
+                rows={2}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Seção 3 - Condições da Compra */}
+          <Card>
+            <CardHeader>
+              <CardTitle>3. Condições da Compra</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Select
+                label="Forma de Pagamento"
+                value={saleData.paymentMethod}
+                onChange={(e) => setSaleData((prev) => ({ ...prev, paymentMethod: e.target.value }))}
+              >
+                <option value="cash">À Vista</option>
+                <option value="financed">Financiado</option>
+              </Select>
+
+              {saleData.paymentMethod === 'financed' && (
+                <div className="grid grid-cols-3 gap-4">
+                  <Input
+                    label="Valor da Entrada (R$)"
+                    value={formatCurrencyDisplay(saleData.downPayment)}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '');
+                      const numeric = raw ? Number(raw) / 100 : '';
+                      setSaleData((prev) => ({ ...prev, downPayment: numeric !== '' ? numeric.toFixed(2).replace('.', ',') : '' }));
+                    }}
+                    placeholder="R$ 0,00"
+                  />
+                  <Input
+                    label="Financeira"
+                    value={saleData.financeCompany}
+                    onChange={(e) => setSaleData((prev) => ({ ...prev, financeCompany: e.target.value }))}
+                    placeholder="Nome da financeira"
+                  />
+                  <Input
+                    label="Data do Financiamento"
+                    type="date"
+                    value={saleData.financeDate}
+                    onChange={(e) => setSaleData((prev) => ({ ...prev, financeDate: e.target.value }))}
+                  />
+                  <Input
+                    label="Valor Financiado (R$)"
+                    value={formatCurrencyDisplay(saleData.financedAmount)}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '');
+                      const numeric = raw ? Number(raw) / 100 : '';
+                      setSaleData((prev) => ({ ...prev, financedAmount: numeric !== '' ? numeric.toFixed(2).replace('.', ',') : '' }));
+                    }}
+                    placeholder="R$ 0,00"
+                  />
+                  <Input
+                    label="Nº de Parcelas"
+                    type="number"
+                    value={saleData.installments}
+                    onChange={(e) => setSaleData((prev) => ({ ...prev, installments: e.target.value }))}
+                    placeholder="36"
+                  />
+                  <Input
+                    label="Valor das Parcelas (R$)"
+                    value={formatCurrencyDisplay(saleData.installmentValue)}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '');
+                      const numeric = raw ? Number(raw) / 100 : '';
+                      setSaleData((prev) => ({ ...prev, installmentValue: numeric !== '' ? numeric.toFixed(2).replace('.', ',') : '' }));
+                    }}
+                    placeholder="R$ 0,00"
+                  />
+                </div>
+              )}
+
+              <div className="mt-4">
+                <p className="mb-2 text-sm font-medium text-gray-700">Veículo na Troca</p>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="hasTradeIn"
+                      checked={!saleData.hasTradeIn}
+                      onChange={() => setSaleData((prev) => ({ ...prev, hasTradeIn: false }))}
+                    />
+                    Não
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="hasTradeIn"
+                      checked={saleData.hasTradeIn}
+                      onChange={() => setSaleData((prev) => ({ ...prev, hasTradeIn: true }))}
+                    />
+                    Sim
+                  </label>
+                </div>
+              </div>
+
+              {saleData.hasTradeIn && (
+                <div className="mt-4 space-y-4 rounded-lg border border-gray-200 p-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <Select
+                      label="Marca"
+                      value={saleData.tradeInBrand}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInBrand: e.target.value, tradeInModel: '', tradeInVersion: '' }))}
+                    >
+                      <option value="">Selecione</option>
+                      {BRANDS.map((b) => (
+                        <option key={b} value={b}>{b}</option>
+                      ))}
+                    </Select>
+                    <Select
+                      label="Modelo"
+                      value={saleData.tradeInModel}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInModel: e.target.value, tradeInVersion: '' }))}
+                      disabled={!saleData.tradeInBrand}
+                    >
+                      <option value="">Selecione</option>
+                      {(MODELS_BY_BRAND[saleData.tradeInBrand] || []).map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </Select>
+                    <Select
+                      label="Versão"
+                      value={saleData.tradeInVersion}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInVersion: e.target.value }))}
+                      disabled={!saleData.tradeInModel}
+                    >
+                      <option value="">Selecione</option>
+                      {(VERSIONS_BY_MODEL[saleData.tradeInModel] || []).map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <Input
+                      label="Placa"
+                      value={saleData.tradeInPlate}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInPlate: e.target.value.toUpperCase() }))}
+                      placeholder="ABC1D23"
+                    />
+                    <Input
+                      label="Ano Fabricação"
+                      type="number"
+                      value={saleData.tradeInYear}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInYear: e.target.value }))}
+                      placeholder="2020"
+                    />
+                    <Input
+                      label="Ano Modelo"
+                      type="number"
+                      value={saleData.tradeInModelYear}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInModelYear: e.target.value }))}
+                      placeholder="2021"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <Select
+                      label="Combustível"
+                      value={saleData.tradeInFuel}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInFuel: e.target.value }))}
+                    >
+                      <option value="flex">Flex</option>
+                      <option value="gasoline">Gasolina</option>
+                      <option value="diesel">Diesel</option>
+                      <option value="electric">Elétrico</option>
+                      <option value="hybrid">Híbrido</option>
+                    </Select>
+                    <Input
+                      label="Chassi"
+                      value={saleData.tradeInChassis}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInChassis: e.target.value }))}
+                      placeholder="9BWZZZ377VT004251"
+                    />
+                    <Input
+                      label="Renavam"
+                      value={saleData.tradeInRenavam}
+                      onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInRenavam: e.target.value }))}
+                      placeholder="12345678901"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <Input
+                      label="Valor da Compra (R$)"
+                      value={formatCurrencyDisplay(saleData.tradeInPurchasePrice)}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const numeric = raw ? Number(raw) / 100 : '';
+                        setSaleData((prev) => ({ ...prev, tradeInPurchasePrice: numeric !== '' ? numeric.toFixed(2).replace('.', ',') : '' }));
+                      }}
+                      placeholder="R$ 0,00"
+                    />
+                    <Input
+                      label="Débitos (R$)"
+                      value={formatCurrencyDisplay(saleData.tradeInDebts)}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, '');
+                        const numeric = raw ? Number(raw) / 100 : '';
+                        const debts = numeric !== '' ? Number(numeric.toFixed(2)) : 0;
+                        const purchase = Number(saleData.tradeInPurchasePrice.replace(',', '.')) || 0;
+                        setSaleData((prev) => ({
+                          ...prev,
+                          tradeInDebts: numeric !== '' ? numeric.toFixed(2).replace('.', ',') : '',
+                          tradeInNetValue: String((purchase - debts).toFixed(2).replace('.', ',')),
+                        }));
+                      }}
+                      placeholder="R$ 0,00"
+                    />
+                    <Input
+                      label="Valor da Entrada (R$)"
+                      value={formatCurrencyDisplay(saleData.tradeInNetValue)}
+                      readOnly
+                      placeholder="R$ 0,00"
+                    />
+                  </div>
+                  <Textarea
+                    label="Observação sobre Débitos"
+                    value={saleData.tradeInDebtsNotes}
+                    onChange={(e) => setSaleData((prev) => ({ ...prev, tradeInDebtsNotes: e.target.value }))}
+                    placeholder="Descreva os débitos do veículo..."
+                    rows={2}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Seção 4 - Documentação Veículo */}
+          <Card>
+            <CardHeader>
+              <CardTitle>4. Documentação Veículo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Textarea
+                label="Observações"
+                value={saleData.documentationNotes}
+                onChange={(e) => setSaleData((prev) => ({ ...prev, documentationNotes: e.target.value }))}
+                placeholder="Insira as informações e valores sobre a transferência do veículo"
+                rows={4}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Seção 5 - Vendedor */}
+          <Card>
+            <CardHeader>
+              <CardTitle>5. Vendedor</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select
+                label="Vendedor"
+                value={saleData.sellerId}
+                onChange={(e) => {
+                  const seller = sellers.find((s) => String(s.id) === e.target.value);
+                  setSaleData((prev) => ({
+                    ...prev,
+                    sellerId: e.target.value,
+                    sellerName: seller?.name || '',
+                  }));
+                }}
+              >
+                <option value="">Selecione</option>
+                {sellers.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </Select>
+            </CardContent>
+          </Card>
+
+          {/* Seção 6 - Download dos Contratos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>6. Download dos Contratos</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button type="button" variant="outline" className="w-full">
+                Contrato de Venda
+              </Button>
+              <Button type="button" variant="outline" className="w-full">
+                Termo de Garantia
+              </Button>
+              <Button type="button" variant="outline" className="w-full">
+                Recibo de Venda
+              </Button>
+            </CardContent>
+          </Card>
+
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={async () => {
+                try {
+                  setLoading(true);
+                  const payload = {
+                    vehicleId: Number(id),
+                    salePrice: Number(saleData.salePrice.replace(',', '.')),
+                    saleDate: saleData.saleDate,
+                    clientName: saleData.clientName,
+                    clientRg: saleData.clientRg,
+                    clientCpfCnpj: saleData.clientCpfCnpj,
+                    clientPhone: saleData.clientPhone,
+                    clientEmail: saleData.clientEmail,
+                    clientAddress: saleData.clientAddress,
+                    paymentMethod: saleData.paymentMethod,
+                    downPayment: saleData.downPayment ? Number(saleData.downPayment.replace(',', '.')) : null,
+                    financeCompany: saleData.financeCompany,
+                    financeDate: saleData.financeDate,
+                    financedAmount: saleData.financedAmount ? Number(saleData.financedAmount.replace(',', '.')) : null,
+                    installments: saleData.installments ? Number(saleData.installments) : null,
+                    installmentValue: saleData.installmentValue ? Number(saleData.installmentValue.replace(',', '.')) : null,
+                    hasTradeIn: saleData.hasTradeIn,
+                    tradeInBrand: saleData.tradeInBrand,
+                    tradeInModel: saleData.tradeInModel,
+                    tradeInVersion: saleData.tradeInVersion,
+                    tradeInPlate: saleData.tradeInPlate,
+                    tradeInYear: saleData.tradeInYear ? Number(saleData.tradeInYear) : null,
+                    tradeInModelYear: saleData.tradeInModelYear ? Number(saleData.tradeInModelYear) : null,
+                    tradeInFuel: saleData.tradeInFuel,
+                    tradeInChassis: saleData.tradeInChassis,
+                    tradeInRenavam: saleData.tradeInRenavam,
+                    tradeInPurchasePrice: saleData.tradeInPurchasePrice ? Number(saleData.tradeInPurchasePrice.replace(',', '.')) : null,
+                    tradeInDebts: saleData.tradeInDebts ? Number(saleData.tradeInDebts.replace(',', '.')) : null,
+                    tradeInDebtsNotes: saleData.tradeInDebtsNotes,
+                    tradeInNetValue: saleData.tradeInNetValue ? Number(saleData.tradeInNetValue.replace(',', '.')) : null,
+                    documentationNotes: saleData.documentationNotes,
+                    sellerId: saleData.sellerId ? Number(saleData.sellerId) : null,
+                    sellerName: saleData.sellerName,
+                  };
+                  await apiClient.post(`/vehicles/${id}/sale`, payload);
+                  alert('Venda registrada com sucesso!');
+                } catch (err: any) {
+                  alert(err?.response?.data?.message || 'Erro ao registrar venda');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+            >
+              Registrar Venda
+            </Button>
+          </div>
+        </div>
+      )}
 
           <div className="mt-6 flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={() => router.back()}>
