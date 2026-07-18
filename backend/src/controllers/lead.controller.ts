@@ -5,11 +5,12 @@ import type { LeadFilters } from '../services/lead.service';
 export const leadController = {
   async list(req: Request, res: Response, next: NextFunction) {
     try {
-      const filters: LeadFilters = {
+      const filters: LeadFilters & { phone?: string } = {
         status: req.query.status as LeadFilters['status'],
         channel: req.query.channel as LeadFilters['channel'],
         assignedToId: req.query.assignedToId ? Number(req.query.assignedToId) : undefined,
         search: req.query.search as string | undefined,
+        phone: req.query.phone as string | undefined,
         page: req.query.page ? Number(req.query.page) : undefined,
         limit: req.query.limit ? Number(req.query.limit) : undefined,
       };

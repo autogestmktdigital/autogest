@@ -8,6 +8,7 @@ export interface LeadFilters {
   channel?: Channel;
   assignedToId?: number;
   search?: string;
+  phone?: string;
   page?: number;
   limit?: number;
 }
@@ -33,8 +34,8 @@ export class LeadService {
     }
 
     // Filtro específico por telefone
-    if ((filters as any).phone) {
-      where.phone = { contains: (filters as any).phone };
+    if (filters.phone) {
+      where.phone = { contains: filters.phone };
     }
 
     const [leads, total] = await Promise.all([
