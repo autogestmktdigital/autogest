@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { CheckCircle, ChevronRight, Phone, Search, Shield, Star, Truck } from 'lucide-react';
 import { WhatsAppLink } from '@/components/site/whatsapp-link';
+import { generateAutoDealerJsonLd } from '@/lib/jsonld';
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://brothersmultimarcas.com';
 
 const differentials = [
   {
@@ -26,8 +29,15 @@ const differentials = [
 ];
 
 export default function HomePage() {
+  const jsonLd = generateAutoDealerJsonLd(siteUrl);
+
   return (
-    <div className="flex flex-col">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="flex flex-col">
       <section className="relative flex min-h-[500px] items-center overflow-hidden bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2800&auto=format&fit=crop')] bg-cover bg-center">
         <div className="absolute inset-0 bg-gradient-to-r from-brothers-dark/95 via-brothers-dark/80 to-brothers-dark/60" />
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-20 lg:px-6">
@@ -164,5 +174,6 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

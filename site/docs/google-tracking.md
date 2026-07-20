@@ -14,12 +14,64 @@ Este documento descreve a implementação de rastreamento Google Tag Manager (GT
 Adicione ao arquivo `.env.local` (ou `.env` em produção):
 
 ```env
+NEXT_PUBLIC_SITE_URL=https://brothersmultimarcas.com
 NEXT_PUBLIC_GTM_ID=GTM-XXXXXXX
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 > **Importante:** O GTM só é carregado quando `NEXT_PUBLIC_GTM_ID` estiver preenchida. Se estiver vazia, nenhum script do GTM é injetado.
 
-O arquivo `.env.example` já contém a variável documentada.
+O arquivo `.env.example` já contém as variáveis documentadas.
+
+---
+
+## Consentimento de Cookies (LGPD)
+
+O site implementa um banner de cookies com três categorias:
+
+- **Essenciais**: sempre ativos, necessários para o funcionamento do site
+- **Analíticos**: Google Analytics, métricas de uso
+- **Marketing**: Meta Pixel, Google Ads, remarketing
+
+### Como funciona:
+
+1. O usuário acessa o site e vê o banner de cookies
+2. O estado padrão de consentimento é `denied` para todas as categorias não essenciais
+3. O GTM **não carrega** antes do consentimento para analíticos ou marketing
+4. O usuário pode:
+   - **Aceitar todos**: ativa analíticos e marketing
+   - **Recusar**: mantém apenas essenciais
+   - **Preferências**: escolhe individualmente
+5. A decisão é salva no `localStorage` e não é exibida novamente
+6. O usuário pode alterar a escolha clicando em "Configurações de cookies" no footer
+
+### Google Consent Mode v2:
+
+O site envia os seguintes estados ao dataLayer:
+
+```javascript
+// Estado padrão (antes do consentimento)
+{
+  event: 'consent_default',
+  consent_state: {
+    analytics_storage: 'denied',
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied'
+  }
+}
+
+// Após o usuário consentir
+{
+  event: 'consent_update',
+  consent_state: {
+    analytics_storage: 'granted',
+    ad_storage: 'granted',
+    ad_user_data: 'granted',
+    ad_personalization: 'granted'
+  }
+}
+```
 
 ---
 
@@ -27,19 +79,27 @@ O arquivo `.env.example` já contém a variável documentada.
 
 | Arquivo | Ação | Descrição |
 |---|---|---|
-| `src/app/layout.tsx` | Alterado | Importa `GoogleTagManager` do `@next/third-parties/google` e renderiza condicionalmente |
+| `src/app/layout.tsx` | Alterado | Metadata completo, CookieBanner, GTM condicional ao consentimento |
 | `src/lib/gtm.ts` | Criado | Funções utilitárias para envio de eventos ao `dataLayer` |
+| `src/lib/consent.ts` | Criado | Gerenciamento de consentimento de cookies e Google Consent Mode v2 |
+| `src/lib/jsonld.ts` | Criado | Geradores de dados estruturados schema.org |
 | `src/types/gtm.d.ts` | Criado | Declaração de tipo global para `window.dataLayer` |
 | `src/components/site/whatsapp-link.tsx` | Criado | Componente de link de WhatsApp com rastreamento automático |
+| `src/components/site/cookie-banner.tsx` | Criado | Banner de consentimento de cookies |
+| `src/components/site/cookie-settings-button.tsx` | Criado | Botão para alterar preferências de cookies |
+| `src/components/site/jsonld-script.tsx` | Criado | Componente para renderizar JSON-LD |
 | `src/components/site/header.tsx` | Alterado | Substitui `<a>` por `<WhatsAppLink>` |
-| `src/components/site/footer.tsx` | Alterado | Substitui `<a>` por `<WhatsAppLink>` |
-| `src/app/page.tsx` | Alterado | Substitui `<a>` do WhatsApp por `<WhatsAppLink>` |
-| `src/app/veiculos/page.tsx` | Alterado | Adiciona evento `view_inventory` e botão WhatsApp nos cards |
-| `src/app/veiculos/[id]/page.tsx` | Alterado | Adiciona evento `view_vehicle` e botão WhatsApp com dados do veículo |
-| `src/app/sitemap.ts` | Criado | Sitemap dinâmico com veículos ativos |
-| `src/app/robots.ts` | Criado | Regras de indexação para robôs |
-| `.env.example` | Criado | Documenta variáveis de ambiente necessárias |
+| `src/components/site/footer.tsx` | Alterado | Substitui `<a>` por `<WhatsAppLink>`, link política + botão cookies |
+| `src/app/page.tsx` | Alterado | Substitui `<a>` do WhatsApp por `<WhatsAppLink>`, JSON-LD AutoDealer |
+| `src/app/veiculos/page.tsx` | Alterado | Evento `view_inventory` e botão WhatsApp nos cards |
+| `src/app/veiculos/[id]/page.tsx` | Alterado | Evento `view_vehicle`, botão WhatsApp, JSON-LD Vehicle |
+| `src/app/politica-de-privacidade/page.tsx` | Criado | Página de política de privacidade LGPD |
+| `src/app/sitemap.ts` | Alterado | Usa `NEXT_PUBLIC_SITE_URL`, inclui política de privacidade |
+| `src/app/robots.ts` | Alterado | Usa `NEXT_PUBLIC_SITE_URL` |
+| `.env.example` | Alterado | Adiciona `NEXT_PUBLIC_SITE_URL` e `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` |
+| `next.config.mjs` | Alterado | Security headers (X-Content-Type-Options, X-Frame-Options, etc.) |
 | `docs/google-tracking.md` | Criado | Este documento |
+| `docs/production-checklist.md` | Criado | Checklist completo de produção |
 
 ---
 
@@ -105,6 +165,29 @@ Disparado **uma única vez** quando a página de estoque (`/veiculos`) é carreg
 
 ---
 
+## Dados Estruturados (JSON-LD)
+
+### Página Inicial — AutoDealer
+
+Schema.org tipo `AutoDealer` com:
+- Nome, URL, logo
+- Telefone, e-mail
+- Endereço completo
+- Redes sociais (Instagram, Facebook)
+- Faixa de preço
+
+### Página de Veículo — Vehicle
+
+Schema.org tipo `Vehicle` com:
+- Nome, marca, modelo
+- Cor, combustível, transmissão
+- Quilometragem
+- Oferta com preço em BRL e disponibilidade `InStock`
+- Imagens do veículo
+- Ano de produção
+
+---
+
 ## Sitemap
 
 Arquivo: `src/app/sitemap.ts`
@@ -112,9 +195,10 @@ Arquivo: `src/app/sitemap.ts`
 Gera sitemap dinâmico em `/sitemap.xml` com:
 - Página inicial (`/`)
 - Página de estoque (`/veiculos`)
+- Página de política de privacidade (`/politica-de-privacidade`)
 - Todas as páginas de veículos ativos (`/veiculos/:id`)
 
-Domínio base: `https://brothersmultimarcas.com`
+Domínio base via `NEXT_PUBLIC_SITE_URL`.
 
 Atualizado automaticamente em cada build.
 
@@ -127,11 +211,36 @@ Arquivo: `src/app/robots.ts`
 Gera `/robots.txt` com:
 - Permissão de indexação em todas as páginas públicas
 - Bloqueio de rotas administrativas: `/admin`, `/login`, `/api`, `/_next`, `/404`
-- Referência ao sitemap: `Sitemap: https://brothersmultimarcas.com/sitemap.xml`
+- Referência ao sitemap via `NEXT_PUBLIC_SITE_URL`
+
+---
+
+## Política de Privacidade
+
+Pública em: `/politica-de-privacidade`
+
+Cobertura:
+- Dados técnicos coletados
+- Uso de cookies (essenciais, analíticos, marketing)
+- Google Analytics e Google Tag Manager
+- Meta Pixel (futuro)
+- Links para WhatsApp
+- Finalidade da coleta
+- Retenção e segurança
+- Direitos LGPD
+- Canal de contato
 
 ---
 
 ## Como Testar
+
+### Testar o Banner de Cookies
+
+1. Abra o site em aba anônima (`Ctrl+Shift+N`)
+2. Verifique se o banner aparece na parte inferior
+3. Clique em "Recusar" e recarregue — o banner não deve reaparecer
+4. Clique em "Configurações de cookies" no footer
+5. Altere a escolha e salve
 
 ### Testar no Modo Preview do Google Tag Manager
 
@@ -151,15 +260,23 @@ Gera `/robots.txt` com:
 - Sitemap: `http://localhost:3004/sitemap.xml`
 - Robots: `http://localhost:3004/robots.txt`
 
+### Validar Dados Estruturados
+
+- Use o [Schema Markup Validator](https://validator.schema.org/)
+- Insira a URL da página inicial (deve mostrar AutoDealer)
+- Insira a URL de um veículo (deve mostrar Vehicle)
+
 ---
 
 ## Validações de Segurança
 
 - ✅ Nenhum dado pessoal do usuário é enviado (telefone, nome, e-mail)
-- ✅ O GTM só carrega se `NEXT_PUBLIC_GTM_ID` estiver configurada
+- ✅ O GTM só carrega se `NEXT_PUBLIC_GTM_ID` estiver configurada **E** o usuário consentiu
 - ✅ Eventos só funcionam no navegador (seguro para SSR)
 - ✅ `window.dataLayer` é verificado antes de cada push
 - ✅ Sem duplicação de eventos por re-renderização
+- ✅ Headers de segurança configurados
+- ✅ Links externos com `rel="noreferrer"`
 
 ---
 
@@ -169,8 +286,8 @@ Gera `/robots.txt` com:
 |---|---|
 | ID do GTM | Configurar `NEXT_PUBLIC_GTM_ID` no ambiente de produção |
 | Google Analytics 4 | Configurar dentro do GTM (não via gtag.js direto) |
-| Meta Pixel | Não incluso nesta tarefa |
-| Banner de cookies | Não incluso nesta tarefa |
+| Meta Pixel | Configurar via GTM futuramente |
+| Google Search Console | Verificar propriedade e submeter sitemap |
 
 ---
 
@@ -181,3 +298,5 @@ Gera `/robots.txt` com:
 - Renderização híbrida (Server Components + Client Components)
 - TypeScript tipado em todos os eventos
 - Componente `WhatsAppLink` reutilizável para novos botões de WhatsApp
+- Consentimento gerenciado via `localStorage` (persistente entre sessões)
+- Google Consent Mode v2 com estados padrão `denied`

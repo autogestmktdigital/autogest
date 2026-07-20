@@ -1,5 +1,6 @@
 import { Mail, MapPin, Phone } from 'lucide-react';
 import { WhatsAppLink } from './whatsapp-link';
+import { CookieSettingsButton } from './cookie-settings-button';
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -77,6 +78,13 @@ export function Footer() {
         <div className="mt-10 border-t border-white/10 pt-6 text-center text-xs text-white/50">
           <p>CNPJ: 48.573.595/0001-09</p>
           <p className="mt-1">© {year} Brothers Multimarcas. Todos os direitos reservados.</p>
+          <div className="mt-3 flex items-center justify-center gap-3">
+            <a href="/politica-de-privacidade" className="underline transition hover:text-brothers-green">
+              Política de Privacidade
+            </a>
+            <span>|</span>
+            <CookieSettingsButton />
+          </div>
         </div>
       </div>
     </footer>
