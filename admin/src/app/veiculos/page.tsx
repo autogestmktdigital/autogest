@@ -184,7 +184,7 @@ export default function VeiculosPage() {
                       <div className="h-12 w-16 overflow-hidden rounded-lg bg-gray-100">
                         {vehicle.images?.[0] ? (
                           <img
-                            src={`http://localhost:3001/uploads/${vehicle.images[0]}`}
+                            src={vehicle.images[0].startsWith('http') ? vehicle.images[0] : `https://autogest-production-404d.up.railway.app/uploads/${vehicle.images[0]}`}
                             alt={`${vehicle.brand} ${vehicle.model}`}
                             className="h-full w-full object-cover"
                           />

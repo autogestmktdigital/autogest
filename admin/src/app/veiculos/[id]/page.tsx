@@ -676,7 +676,7 @@ export default function EditVeiculoPage() {
                     {existingReportFile && (
                       <div className="mb-2 flex items-center gap-2">
                         <a
-                          href={`http://localhost:3001/uploads/${existingReportFile}`}
+                          href={existingReportFile.startsWith('http') ? existingReportFile : `https://autogest-production-404d.up.railway.app/uploads/${existingReportFile}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:underline"
@@ -707,7 +707,7 @@ export default function EditVeiculoPage() {
                     {existingDocumentFile && (
                       <div className="mb-2 flex items-center gap-2">
                         <a
-                          href={`http://localhost:3001/uploads/${existingDocumentFile}`}
+                          href={existingDocumentFile.startsWith('http') ? existingDocumentFile : `https://autogest-production-404d.up.railway.app/uploads/${existingDocumentFile}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:underline"
@@ -749,7 +749,7 @@ export default function EditVeiculoPage() {
                         {existingImages.map((img, index) => (
                           <div key={index} className={`group relative aspect-video overflow-hidden rounded-lg ${coverImage === index ? 'ring-2 ring-blue-500' : ''}`}>
                             <img
-                              src={`http://localhost:3001/uploads/${img}`}
+                              src={img.startsWith('http') ? img : `https://autogest-production-404d.up.railway.app/uploads/${img}`}
                               alt={`Imagem ${index + 1}`}
                               className="h-full w-full object-cover"
                             />
