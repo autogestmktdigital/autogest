@@ -20,6 +20,23 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+    </svg>
+  );
+}
+
+function YouTubeIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
+      <path d="m10 15 5-3-5-3z" />
+    </svg>
+  );
+}
+
 export function Footer() {
   const year = new Date().getFullYear();
 
@@ -56,7 +73,15 @@ export function Footer() {
             <h3 className="mb-4 text-lg font-semibold text-brothers-green">Redes Sociais</h3>
             <div className="flex gap-4">
               <a
-                href="https://instagram.com/newbrothers_multimarcas"
+                href="https://www.facebook.com/NewBrothersMultimarcas"
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/80 transition hover:border-brothers-green hover:text-brothers-green"
+              >
+                <FacebookIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.instagram.com/brothersmultimarcassp"
                 target="_blank"
                 rel="noreferrer"
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/80 transition hover:border-brothers-green hover:text-brothers-green"
@@ -64,12 +89,20 @@ export function Footer() {
                 <InstagramIcon className="h-5 w-5" />
               </a>
               <a
-                href="https://facebook.com/brothersmultimarcas"
+                href="https://www.tiktok.com/@brothersmultimarcassp"
                 target="_blank"
                 rel="noreferrer"
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/80 transition hover:border-brothers-green hover:text-brothers-green"
               >
-                <FacebookIcon className="h-5 w-5" />
+                <TikTokIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.youtube.com/@brothersmultimarcassp"
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-white/80 transition hover:border-brothers-green hover:text-brothers-green"
+              >
+                <YouTubeIcon className="h-5 w-5" />
               </a>
             </div>
           </div>
