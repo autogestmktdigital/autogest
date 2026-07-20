@@ -1,4 +1,4 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const BASE_URL = 'https://autogest-production-404d.up.railway.app/api';
 
 interface ApiOptions extends RequestInit {
   skipAuth?: boolean;
