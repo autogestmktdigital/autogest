@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { vehicleService } from '../services/vehicle.service';
 import type { VehicleFilters } from '../services/vehicle.service';
+import { uploadToCloudinary, hasCloudinaryConfig } from '../middleware/upload';
 
 export const vehicleController = {
   async publicList(req: Request, res: Response, next: NextFunction) {
@@ -78,7 +79,20 @@ export const vehicleController = {
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const files = req.files as Express.Multer.File[] | undefined;
-      const images = files?.filter(f => f.fieldname === 'images').map((f) => f.filename) || [];
+      
+      // Upload images to Cloudinary if configured, otherwise use local filenames
+      let images: string[] = [];
+      const imageFiles = files?.filter(f => f.fieldname === 'images') || [];
+      
+      if (hasCloudinaryConfig) {
+        for (const file of imageFiles) {
+          const url = await uploadToCloudinary(file, 'vehicles');
+          images.push(url);
+        }
+      } else {
+        images = imageFiles.map((f) => f.filename);
+      }
+      
       const reportFile = files?.find(f => f.fieldname === 'reportFile')?.filename;
       const documentFile = files?.find(f => f.fieldname === 'documentFile')?.filename;
 
@@ -106,7 +120,20 @@ export const vehicleController = {
     try {
       const id = Number(req.params.id);
       const files = req.files as Express.Multer.File[] | undefined;
-      const newImages = files?.filter(f => f.fieldname === 'images').map((f) => f.filename) || [];
+      
+      // Upload new images to Cloudinary if configured
+      let newImages: string[] = [];
+      const imageFiles = files?.filter(f => f.fieldname === 'images') || [];
+      
+      if (hasCloudinaryConfig) {
+        for (const file of imageFiles) {
+          const url = await uploadToCloudinary(file, 'vehicles');
+          newImages.push(url);
+        }
+      } else {
+        newImages = imageFiles.map((f) => f.filename);
+      }
+      
       const reportFile = files?.find(f => f.fieldname === 'reportFile')?.filename;
       const documentFile = files?.find(f => f.fieldname === 'documentFile')?.filename;
 
