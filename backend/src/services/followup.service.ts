@@ -31,9 +31,19 @@ export class FollowUpService {
   }
 
   async processPendingFollowUps() {
-    const pendingFollowUps = await prisma.followUp.findMany({
+    // Atualizar agendamentos vencidos de "scheduled" para "pending"
+    await prisma.followUp.updateMany({
       where: {
         status: 'scheduled',
+        scheduledFor: { lte: new Date() },
+      },
+      data: { status: 'pending' },
+    });
+
+    // Buscar follow-ups pendentes para processar (enviar mensagem automática)
+    const pendingFollowUps = await prisma.followUp.findMany({
+      where: {
+        status: 'pending',
         scheduledFor: { lte: new Date() },
       },
       include: {
@@ -98,6 +108,33 @@ export class FollowUpService {
     return prisma.followUp.findMany({
       where: { leadId },
       orderBy: { scheduledFor: 'desc' },
+    });
+  }
+
+  async listAll() {
+    return prisma.followUp.findMany({
+      include: {
+        lead: { select: { id: true, name: true, phone: true } },
+      },
+      orderBy: { scheduledFor: 'desc' },
+    });
+  }
+
+  async update(id: number, data: { scheduledFor?: Date }) {
+    return prisma.followUp.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async create(data: { leadId: number; type: string; scheduledFor: Date }) {
+    return prisma.followUp.create({
+      data: {
+        leadId: data.leadId,
+        type: data.type as FollowUpType,
+        status: 'scheduled',
+        scheduledFor: data.scheduledFor,
+      },
     });
   }
 

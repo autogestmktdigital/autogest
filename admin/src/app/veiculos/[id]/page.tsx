@@ -286,7 +286,7 @@ export default function EditVeiculoPage() {
   async function addExpense() {
     if (!newExpense.description || !newExpense.amount || !newExpense.date) return;
     try {
-      const res = await apiClient.post(`/vehicles/${id}/expenses`, {
+      const res = await apiClient.post<{ success: boolean; data: any }>(`/vehicles/${id}/expenses`, {
         type: newExpense.type,
         description: newExpense.description,
         amount: Number(newExpense.amount.replace(',', '.')),

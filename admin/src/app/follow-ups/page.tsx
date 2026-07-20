@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { XCircle } from 'lucide-react';
+import { XCircle, Calendar, Edit } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Dialog } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import apiClient from '@/lib/api';
 import {
   formatDateTime,
@@ -30,13 +31,15 @@ interface FollowUp {
   };
 }
 
-type TabFilter = 'all' | 'scheduled' | 'sent' | 'failed';
+type TabFilter = 'all' | 'scheduled' | 'pending' | 'completed' | 'cancelled';
 
 export default function FollowUpsPage() {
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabFilter>('all');
   const [cancelId, setCancelId] = useState<number | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editDate, setEditDate] = useState('');
 
   useEffect(() => {
     fetchFollowUps();
@@ -45,29 +48,8 @@ export default function FollowUpsPage() {
   async function fetchFollowUps() {
     setLoading(true);
     try {
-      // The backend doesn't have a dedicated follow-ups list endpoint,
-      // so we fetch leads and aggregate follow-ups. For now, we'll use
-      // a direct approach assuming the backend exposes follow-ups via leads.
-      const res = await apiClient.get<{ success: boolean; data: FollowUp[] }>('/leads?limit=100');
-
-      // If the API returns leads with follow-ups embedded, extract them
-      // Otherwise, use the data as-is if it's a follow-ups endpoint
-      if (Array.isArray(res.data)) {
-        // Try to extract follow-ups from leads
-        const allFollowUps: FollowUp[] = [];
-        for (const item of res.data as unknown[]) {
-          const lead = item as { id: number; name: string; phone: string; followUps?: FollowUp[] };
-          if (lead.followUps) {
-            for (const fu of lead.followUps) {
-              allFollowUps.push({
-                ...fu,
-                lead: { id: lead.id, name: lead.name, phone: lead.phone },
-              });
-            }
-          }
-        }
-        setFollowUps(allFollowUps);
-      }
+      const res = await apiClient.get<{ success: boolean; data: FollowUp[] }>('/follow-ups');
+      setFollowUps(res.data || []);
     } catch {
       setFollowUps([]);
     } finally {
@@ -78,14 +60,34 @@ export default function FollowUpsPage() {
   async function handleCancel() {
     if (!cancelId) return;
     try {
-      // Cancel follow-up - this would need a backend endpoint
-      // For now, we'll try PATCH approach
-      await apiClient.patch(`/leads/${cancelId}/status`, { status: 'cancelled' });
+      await apiClient.patch(`/follow-ups/${cancelId}/cancel`);
       setCancelId(null);
       fetchFollowUps();
     } catch {
       setCancelId(null);
     }
+  }
+
+  async function handleEdit() {
+    if (!editId || !editDate) return;
+    try {
+      await apiClient.patch(`/follow-ups/${editId}`, {
+        scheduledFor: new Date(editDate).toISOString(),
+      });
+      setEditId(null);
+      setEditDate('');
+      fetchFollowUps();
+    } catch {
+      // Error handled by api client
+    }
+  }
+
+  function openEdit(followUp: FollowUp) {
+    setEditId(followUp.id);
+    // Converter para formato datetime-local
+    const date = new Date(followUp.scheduledFor);
+    const formatted = date.toISOString().slice(0, 16);
+    setEditDate(formatted);
   }
 
   const filteredFollowUps = followUps.filter((fu) => {
@@ -96,13 +98,14 @@ export default function FollowUpsPage() {
   const tabs: { key: TabFilter; label: string }[] = [
     { key: 'all', label: 'Todos' },
     { key: 'scheduled', label: 'Agendados' },
-    { key: 'sent', label: 'Enviados' },
-    { key: 'failed', label: 'Falhou' },
+    { key: 'pending', label: 'Pendentes' },
+    { key: 'completed', label: 'Concluídos' },
+    { key: 'cancelled', label: 'Cancelados' },
   ];
 
   return (
     <div>
-      <Header title="Follow-ups" onMenuToggle={() => {}} />
+      <Header title="Agendamento" onMenuToggle={() => {}} />
       <div className="p-4 sm:p-6">
         {/* Tabs */}
         <div className="mb-6 flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
@@ -128,7 +131,6 @@ export default function FollowUpsPage() {
               <TableRow>
                 <TableHead>Lead</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead>Mensagem</TableHead>
                 <TableHead>Agendado para</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Ações</TableHead>
@@ -138,7 +140,7 @@ export default function FollowUpsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 5 }).map((_, j) => (
                       <TableCell key={j}>
                         <div className="h-4 w-20 animate-pulse rounded bg-gray-200" />
                       </TableCell>
@@ -147,8 +149,8 @@ export default function FollowUpsPage() {
                 ))
               ) : filteredFollowUps.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                    Nenhum follow-up encontrado
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                    Nenhum agendamento encontrado
                   </TableCell>
                 </TableRow>
               ) : (
@@ -162,11 +164,6 @@ export default function FollowUpsPage() {
                         {followUpTypeLabels[fu.type] || fu.type}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <span className="line-clamp-1 max-w-xs text-sm text-gray-600">
-                        {fu.messageContent || '—'}
-                      </span>
-                    </TableCell>
                     <TableCell>{formatDateTime(fu.scheduledFor)}</TableCell>
                     <TableCell>
                       <Badge variant={followUpStatusColors[fu.status] as 'success' | 'warning' | 'danger' | 'default'}>
@@ -174,16 +171,27 @@ export default function FollowUpsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {fu.status === 'scheduled' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => setCancelId(fu.id)}
-                        >
-                          <XCircle className="h-4 w-4" />
-                          Cancelar
-                        </Button>
+                      {(fu.status === 'scheduled' || fu.status === 'pending') && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => openEdit(fu)}
+                          >
+                            <Edit className="h-4 w-4" />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => setCancelId(fu.id)}
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Cancelar
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>
@@ -197,18 +205,47 @@ export default function FollowUpsPage() {
         <Dialog
           open={cancelId !== null}
           onClose={() => setCancelId(null)}
-          title="Cancelar Follow-up"
+          title="Cancelar Agendamento"
         >
           <p className="text-sm text-gray-600 mb-4">
-            Tem certeza que deseja cancelar este follow-up?
+            Tem certeza que deseja cancelar este agendamento?
           </p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setCancelId(null)}>
               Voltar
             </Button>
             <Button variant="destructive" onClick={handleCancel}>
-              Cancelar Follow-up
+              Cancelar Agendamento
             </Button>
+          </div>
+        </Dialog>
+
+        {/* Edit dialog */}
+        <Dialog
+          open={editId !== null}
+          onClose={() => { setEditId(null); setEditDate(''); }}
+          title="Editar Agendamento"
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nova Data e Hora
+              </label>
+              <Input
+                type="datetime-local"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => { setEditId(null); setEditDate(''); }}>
+                Cancelar
+              </Button>
+              <Button onClick={handleEdit} disabled={!editDate}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Salvar Alteração
+              </Button>
+            </div>
           </div>
         </Dialog>
       </div>

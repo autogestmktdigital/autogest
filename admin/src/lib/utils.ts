@@ -119,7 +119,10 @@ export const transmissionLabels: Record<string, string> = {
 
 export const followUpTypeLabels: Record<string, string> = {
   welcome_24h: 'Boas-vindas 24h',
-  check_interest: 'Verificar Interesse',
+  check_interest: 'Retornar ao Cliente',
+  schedule_visit: 'Agendar Visita',
+  send_catalog: 'Enviar catálogo',
+  other: 'Outros',
   price_drop: 'Queda de Preço',
   new_stock: 'Novo Estoque',
   custom: 'Personalizado',
@@ -127,14 +130,18 @@ export const followUpTypeLabels: Record<string, string> = {
 
 export const followUpStatusLabels: Record<string, string> = {
   scheduled: 'Agendado',
+  pending: 'Pendente',
+  completed: 'Concluído',
+  cancelled: 'Cancelado',
   sent: 'Enviado',
   failed: 'Falhou',
-  cancelled: 'Cancelado',
 };
 
 export const followUpStatusColors: Record<string, string> = {
   scheduled: 'warning',
+  pending: 'danger',
+  completed: 'success',
+  cancelled: 'default',
   sent: 'success',
   failed: 'danger',
-  cancelled: 'default',
 };

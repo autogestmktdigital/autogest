@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'AutoGest - Painel Admin',
+  title: 'AutoGest',
   description: 'Painel administrativo do AutoGest',
 };
 

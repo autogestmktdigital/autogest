@@ -27,13 +27,13 @@ export default function DashboardPage() {
       try {
         const [leadsRes, vehiclesRes, conversationsRes] = await Promise.allSettled([
           apiClient.get<{ success: boolean; data: { total: number; byStatus: Record<string, number> } }>('/leads/stats'),
-          apiClient.get<{ success: boolean; data: unknown[]; total: number }>('/vehicles?status=available&limit=1'),
+          apiClient.get<{ success: boolean; data: unknown[]; total: number; pagination?: { total: number } }>('/vehicles?status=available&limit=1'),
           apiClient.get<{ success: boolean; data: unknown[] }>('/conversations/active'),
         ]);
 
         const totalLeads = leadsRes.status === 'fulfilled' ? leadsRes.value.data.total : 0;
         const converted = leadsRes.status === 'fulfilled' ? (leadsRes.value.data.byStatus?.converted || 0) : 0;
-        const availableVehicles = vehiclesRes.status === 'fulfilled' ? vehiclesRes.value.pagination?.total : 0;
+        const availableVehicles = vehiclesRes.status === 'fulfilled' ? (vehiclesRes.value.pagination?.total ?? vehiclesRes.value.data.length) : 0;
         const activeConversations = conversationsRes.status === 'fulfilled' ? conversationsRes.value.data.length : 0;
         const conversionRate = totalLeads > 0 ? Math.round((converted / totalLeads) * 100) : 0;
 

@@ -19,7 +19,7 @@ const navigation = [
   { name: 'Veículos', href: '/veiculos', icon: Car },
   { name: 'Leads', href: '/leads', icon: Users },
   { name: 'Conversas', href: '/conversas', icon: MessageSquare },
-  { name: 'Follow-ups', href: '/follow-ups', icon: Clock },
+  { name: 'Agendamento', href: '/follow-ups', icon: Clock },
   { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ];
 

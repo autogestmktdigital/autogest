@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Send, PhoneForwarded, XCircle, Lock } from 'lucide-react';
+import { Send, PhoneForwarded, XCircle, Lock, CalendarPlus } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,11 @@ interface Conversation {
     status?: string;
     assignedTo?: { id: number; name: string };
   };
+  pendingFollowUp?: {
+    id: number;
+    scheduledFor: string;
+    type: string;
+  } | null;
   messages?: Message[];
 }
 
@@ -59,6 +64,9 @@ export default function ConversasPage() {
   const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [closeStatus, setCloseStatus] = useState('');
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleType, setScheduleType] = useState('check_interest');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedConversation = conversations.find((c) => c.id === selectedId);
@@ -154,6 +162,8 @@ export default function ConversasPage() {
       });
       setNewMessage('');
       fetchMessages(selectedId);
+      // Atualizar lista para remover sinalizações de agendamento pendentes
+      fetchConversations();
     } catch {
       // Error handled by api client
     } finally {
@@ -193,6 +203,24 @@ export default function ConversasPage() {
       fetchConversations();
     } catch (err: any) {
       alert(err?.message || 'Erro ao encerrar conversa');
+    }
+  }
+
+  async function handleSchedule() {
+    if (!selectedConversation || !scheduleDate) return;
+    try {
+      await apiClient.post('/follow-ups', {
+        leadId: selectedConversation.lead.id,
+        type: scheduleType,
+        scheduledFor: new Date(scheduleDate).toISOString(),
+      });
+      setShowScheduleDialog(false);
+      setScheduleDate('');
+      setScheduleType('check_interest');
+      fetchConversations();
+      alert('Agendamento criado com sucesso!');
+    } catch (err: any) {
+      alert(err?.message || 'Erro ao criar agendamento');
     }
   }
 
@@ -274,8 +302,13 @@ export default function ConversasPage() {
                         {conv.lead.assignedTo.name}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="info" className="text-[10px]">
                         Sem vendedor
+                      </Badge>
+                    )}
+                    {conv.pendingFollowUp && (
+                      <Badge variant="danger" className="text-[10px] animate-pulse">
+                        ⚠️ Retornar: {formatDateTime(conv.pendingFollowUp.scheduledFor)}
                       </Badge>
                     )}
                   </div>
@@ -320,7 +353,7 @@ export default function ConversasPage() {
                         {selectedConversation.lead.assignedTo.name}
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-[10px]">
+                      <Badge variant="info" className="text-[10px]">
                         Sem vendedor
                       </Badge>
                     )}
@@ -335,6 +368,12 @@ export default function ConversasPage() {
                     >
                       <PhoneForwarded className="h-4 w-4" />
                       Assumir
+                    </Button>
+                  )}
+                  {selectedConversation?.lead?.status !== 'new' && selectedConversation?.lead?.status !== 'bot' && (
+                    <Button variant="outline" size="sm" onClick={() => setShowScheduleDialog(true)}>
+                      <CalendarPlus className="h-4 w-4" />
+                      Agendar
                     </Button>
                   )}
                   <Button variant="outline" size="sm" onClick={() => setShowCloseDialog(true)}>
@@ -366,26 +405,26 @@ export default function ConversasPage() {
                       >
                         <div
                           className={cn(
-                            'max-w-[70%] rounded-2xl px-4 py-2.5 shadow-sm',
+                            'max-w-[75%] rounded-2xl px-5 py-3 shadow-sm',
                             msg.role === 'customer'
-                              ? 'bg-white text-gray-800 rounded-bl-md'
+                              ? 'bg-white text-gray-800 rounded-bl-md border border-gray-200'
                               : msg.role === 'assistant'
                               ? 'bg-blue-600 text-white rounded-br-md'
-                              : 'bg-green-600 text-white rounded-br-md'
+                              : 'bg-orange-500 text-white rounded-br-md'
                           )}
                         >
                           {msg.role !== 'customer' && (
                             <p className={cn(
-                              'text-[10px] font-medium mb-0.5',
-                              msg.role === 'assistant' ? 'text-blue-200' : 'text-green-200'
+                              'text-[11px] font-medium mb-0.5',
+                              msg.role === 'assistant' ? 'text-blue-200' : 'text-orange-100'
                             )}>
                               {msg.role === 'assistant' ? 'Bot' : 'Agente'}
                             </p>
                           )}
                           <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                           <p className={cn(
-                            'mt-1 text-[10px]',
-                            msg.role === 'customer' ? 'text-gray-400' : 'text-white/60'
+                            'mt-1 text-[11px]',
+                            msg.role === 'customer' ? 'text-gray-400' : 'text-white/70'
                           )}>
                             {formatDateTime(msg.sentAt)}
                           </p>
@@ -419,6 +458,61 @@ export default function ConversasPage() {
                   </div>
                 )}
               </div>
+
+              {/* Dialog de agendamento */}
+              {showScheduleDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                  <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Criar Agendamento
+                    </h3>
+                    <div className="space-y-4 mb-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Data e Hora
+                        </label>
+                        <Input
+                          type="datetime-local"
+                          value={scheduleDate}
+                          onChange={(e) => setScheduleDate(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Tipo
+                        </label>
+                        <select
+                          className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={scheduleType}
+                          onChange={(e) => setScheduleType(e.target.value)}
+                        >
+                          <option value="check_interest">Retornar ao Cliente</option>
+                          <option value="schedule_visit">Agendar Visita</option>
+                          <option value="other">Outros</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setShowScheduleDialog(false);
+                          setScheduleDate('');
+                          setScheduleType('check_interest');
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        onClick={handleSchedule}
+                        disabled={!scheduleDate}
+                      >
+                        Confirmar Agendamento
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Dialog de encerramento */}
               {showCloseDialog && (

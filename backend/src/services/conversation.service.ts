@@ -36,6 +36,20 @@ export class ConversationService {
         },
       });
     } else {
+      // Se for mensagem do agente, marcar follow-ups pendentes como concluídos
+      const conversation = await prisma.conversation.findUnique({
+        where: { id: conversationId },
+        select: { leadId: true },
+      });
+      if (conversation) {
+        await prisma.followUp.updateMany({
+          where: {
+            leadId: conversation.leadId,
+            status: 'scheduled',
+          },
+          data: { status: 'completed' },
+        });
+      }
       await prisma.conversation.update({
         where: { id: conversationId },
         data: { lastMessageAt: new Date() },
@@ -111,7 +125,7 @@ export class ConversationService {
   }
 
   async getActiveConversations() {
-    return prisma.conversation.findMany({
+    const conversations = await prisma.conversation.findMany({
       where: { status: 'active' },
       include: {
         lead: { select: { id: true, name: true, phone: true, channel: true, status: true, assignedTo: { select: { id: true, name: true } } } },
@@ -122,6 +136,28 @@ export class ConversationService {
         { lastMessageAt: 'desc' },
       ],
     });
+
+    // Buscar follow-ups pendentes para cada lead (só quando chegou a data/hora)
+    const now = new Date();
+    const conversationsWithFollowUps = await Promise.all(
+      conversations.map(async (conv) => {
+        const pendingFollowUps = await prisma.followUp.findMany({
+          where: {
+            leadId: conv.leadId,
+            status: 'scheduled',
+            scheduledFor: { lte: now },
+          },
+          orderBy: { scheduledFor: 'asc' },
+          take: 1,
+        });
+        return {
+          ...conv,
+          pendingFollowUp: pendingFollowUps[0] || null,
+        };
+      })
+    );
+
+    return conversationsWithFollowUps;
   }
 
   async closeConversation(conversationId: number) {
