@@ -43,18 +43,16 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
-          <div className="mb-4 flex h-20 w-48 items-center justify-center">
+          <div className="mb-2 flex h-28 w-64 items-center justify-center">
             <Image
               src="/logo-autogest.png"
               alt="AutoGest"
-              width={180}
-              height={60}
+              width={240}
+              height={80}
               className="object-contain"
               priority
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">AutoGest</h1>
-          <p className="text-sm text-gray-500">Painel Administrativo</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
