@@ -51,6 +51,8 @@ model Vehicle {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   financingSimulations FinancingSimulation[]
+  expenses             VehicleExpense[]
+  sale                 VehicleSale?
 
   @@map("vehicles")
 }
@@ -88,6 +90,7 @@ model Conversation {
   typebotSessionId String?  @map("typebot_session_id")
   isHumanHandoff   Boolean  @default(false) @map("is_human_handoff")
   status           String   @default("active")
+  unreadCount      Int      @default(0) @map("unread_count")
   startedAt        DateTime @default(now()) @map("started_at")
   lastMessageAt    DateTime? @map("last_message_at")
 
@@ -147,4 +150,44 @@ model FollowUp {
   lead Lead @relation(fields: [leadId], references: [id])
 
   @@map("follow_ups")
+}
+
+// ─── Despesas do Veículo ───
+
+model VehicleExpense {
+  id          Int      @id @default(autoincrement())
+  vehicleId   Int      @map("vehicle_id")
+  type        String
+  description String?
+  amount      Float
+  date        DateTime
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_expenses")
+}
+
+// ─── Venda do Veículo ───
+
+model VehicleSale {
+  id              Int      @id @default(autoincrement())
+  vehicleId       Int      @unique @map("vehicle_id")
+  salePrice       Float    @map("sale_price")
+  saleDate        DateTime @map("sale_date")
+  buyerName       String   @map("buyer_name")
+  buyerPhone      String?  @map("buyer_phone")
+  buyerEmail      String?  @map("buyer_email")
+  paymentMethod   String   @map("payment_method")
+  downPayment     Float?   @map("down_payment")
+  financedAmount  Float?   @map("financed_amount")
+  installments    Int?
+  installmentValue Float?  @map("installment_value")
+  notes           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_sales")
 }
