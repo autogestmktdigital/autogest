@@ -93,8 +93,24 @@ export const vehicleController = {
         images = imageFiles.map((f) => f.filename);
       }
       
-      const reportFile = files?.find(f => f.fieldname === 'reportFile')?.filename;
-      const documentFile = files?.find(f => f.fieldname === 'documentFile')?.filename;
+      // Upload documents to Cloudinary if configured
+      let reportFile: string | undefined;
+      let documentFile: string | undefined;
+      
+      const reportFileObj = files?.find(f => f.fieldname === 'reportFile');
+      const documentFileObj = files?.find(f => f.fieldname === 'documentFile');
+      
+      if (hasCloudinaryConfig) {
+        if (reportFileObj) {
+          reportFile = await uploadToCloudinary(reportFileObj, 'documents');
+        }
+        if (documentFileObj) {
+          documentFile = await uploadToCloudinary(documentFileObj, 'documents');
+        }
+      } else {
+        reportFile = reportFileObj?.filename;
+        documentFile = documentFileObj?.filename;
+      }
 
       const data = {
         ...req.body,
@@ -134,8 +150,24 @@ export const vehicleController = {
         newImages = imageFiles.map((f) => f.filename);
       }
       
-      const reportFile = files?.find(f => f.fieldname === 'reportFile')?.filename;
-      const documentFile = files?.find(f => f.fieldname === 'documentFile')?.filename;
+      // Upload documents to Cloudinary if configured
+      let reportFile: string | undefined;
+      let documentFile: string | undefined;
+      
+      const reportFileObj = files?.find(f => f.fieldname === 'reportFile');
+      const documentFileObj = files?.find(f => f.fieldname === 'documentFile');
+      
+      if (hasCloudinaryConfig) {
+        if (reportFileObj) {
+          reportFile = await uploadToCloudinary(reportFileObj, 'documents');
+        }
+        if (documentFileObj) {
+          documentFile = await uploadToCloudinary(documentFileObj, 'documents');
+        }
+      } else {
+        reportFile = reportFileObj?.filename;
+        documentFile = documentFileObj?.filename;
+      }
 
       // Remover campos que não existem no schema Prisma
       const { existingImages, ...bodyData } = req.body;

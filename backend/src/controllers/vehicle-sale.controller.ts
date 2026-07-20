@@ -1,11 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { vehicleSaleService } from '../services/vehicle-sale.service';
+import { uploadToCloudinary, hasCloudinaryConfig } from '../middleware/upload';
 
 export const vehicleSaleController = {
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const files = req.files as Express.Multer.File[] | undefined;
-      const clientDocuments = files?.filter(f => f.fieldname === 'clientDocuments').map((f) => f.filename) || [];
+      
+      // Upload client documents to Cloudinary if configured
+      let clientDocuments: string[] = [];
+      const documentFiles = files?.filter(f => f.fieldname === 'clientDocuments') || [];
+      
+      if (hasCloudinaryConfig) {
+        for (const file of documentFiles) {
+          const url = await uploadToCloudinary(file, 'sale-documents');
+          clientDocuments.push(url);
+        }
+      } else {
+        clientDocuments = documentFiles.map((f) => f.filename);
+      }
 
       const data: Record<string, unknown> = { ...req.body };
       
