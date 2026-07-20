@@ -429,9 +429,7 @@ export default function EditVeiculoPage() {
         reorderedNewImages.unshift(cover);
       }
 
-      if (allImages.length > 0) {
-        formData.append('existingImages', JSON.stringify(allImages));
-      }
+      formData.append('existingImages', JSON.stringify(allImages));
 
       reorderedNewImages.forEach((file) => {
         formData.append('images', file);
