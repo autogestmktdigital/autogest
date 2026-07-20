@@ -38,19 +38,11 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="flex flex-col">
-      <section className="relative flex min-h-[500px] items-center overflow-hidden bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2800&auto=format&fit=crop')] bg-cover bg-center">
-        <div className="absolute inset-0 bg-gradient-to-r from-brothers-dark/95 via-brothers-dark/80 to-brothers-dark/60" />
+      <section className="relative flex min-h-[500px] items-center overflow-hidden bg-[url('/banner-home.jpg')] bg-cover bg-center">
+        <div className="absolute inset-0 bg-gradient-to-r from-brothers-dark/80 via-brothers-dark/60 to-transparent" />
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-20 lg:px-6">
           <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-center">
-            <div className="flex flex-shrink-0 items-center justify-start lg:w-1/3">
-              <img
-                src="/images/icon-brothers-oficial.png"
-                alt="Ícone Brothers Multimarcas"
-                className="h-40 w-auto object-contain md:h-52 lg:h-64"
-              />
-            </div>
-
-            <div className="flex w-full flex-col items-center px-0 text-center lg:w-2/3 lg:items-start lg:pl-12 lg:text-left">
+            <div className="flex w-full flex-col items-center px-0 text-center lg:items-start lg:text-left">
               <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-brothers-green">
                 Seminovos selecionados
               </p>
