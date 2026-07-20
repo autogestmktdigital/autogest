@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { GoogleTagManager } from '@next/third-parties/google';
 import { Header } from '@/components/site/header';
 import { Footer } from '@/components/site/footer';
 
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
+
   return (
     <html lang="pt-BR">
       <body className="bg-brothers-dark text-white min-h-screen flex flex-col">
@@ -19,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1">{children}</main>
         <Footer />
       </body>
+      {gtmId ? <GoogleTagManager gtmId={gtmId} /> : null}
     </html>
   );
 }

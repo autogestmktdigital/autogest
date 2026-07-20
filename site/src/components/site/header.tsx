@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Clock, Menu, Phone, X } from 'lucide-react';
+import { WhatsAppLink } from './whatsapp-link';
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -30,7 +31,7 @@ export function Header() {
             Início
           </Link>
           <Link href="/veiculos" className="text-sm font-medium text-white/80 transition hover:text-brothers-green">
-            Veículos
+            Estoque
           </Link>
           <Link href="/#sobre" className="text-sm font-medium text-white/80 transition hover:text-brothers-green">
             Sobre
@@ -41,15 +42,14 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-4 lg:flex">
-          <a
+          <WhatsAppLink
             href="https://wa.me/5511985614257"
-            target="_blank"
-            rel="noreferrer"
+            buttonLocation="header"
             className="flex items-center gap-2 rounded-full bg-brothers-green px-4 py-2 text-sm font-semibold text-brothers-dark transition hover:brightness-110"
           >
             <Phone className="h-4 w-4" />
             Fale pelo WhatsApp
-          </a>
+          </WhatsAppLink>
         </div>
 
         <button
@@ -68,7 +68,7 @@ export function Header() {
               Início
             </Link>
             <Link href="/veiculos" onClick={() => setMobileOpen(false)}>
-              Veículos
+              Estoque
             </Link>
             <Link href="/#sobre" onClick={() => setMobileOpen(false)}>
               Sobre
@@ -76,9 +76,13 @@ export function Header() {
             <Link href="/#contato" onClick={() => setMobileOpen(false)}>
               Contato
             </Link>
-            <a href="https://wa.me/5511985614257" target="_blank" rel="noreferrer" className="text-brothers-green">
+            <WhatsAppLink
+              href="https://wa.me/5511985614257"
+              buttonLocation="header"
+              className="text-brothers-green"
+            >
               Fale pelo WhatsApp
-            </a>
+            </WhatsAppLink>
           </div>
         </div>
       ) : null}

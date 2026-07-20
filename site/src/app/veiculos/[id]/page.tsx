@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Calendar, CheckCircle, ChevronLeft, ChevronRight, Fuel, Gauge, Palette, Phone, Settings } from 'lucide-react';
 import { formatVehicleYear, getImageUrl, getVehicle } from '@/lib/api';
+import { trackViewVehicle } from '@/lib/gtm';
+import { WhatsAppLink } from '@/components/site/whatsapp-link';
 import type { Vehicle } from '@/types';
 
 function formatCurrency(value: number) {
@@ -22,11 +24,25 @@ export default function VehicleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
   const [error, setError] = useState('');
+  const trackedRef = useRef(false);
 
   useEffect(() => {
     if (!id) return;
     getVehicle(id)
-      .then((res) => setVehicle(res.data))
+      .then((res) => {
+        setVehicle(res.data);
+        if (!trackedRef.current) {
+          trackedRef.current = true;
+          trackViewVehicle({
+            vehicleId: res.data.id,
+            vehicleName: `${res.data.brand} ${res.data.model}`,
+            vehicleBrand: res.data.brand,
+            vehicleModel: res.data.model,
+            vehicleYear: formatVehicleYear(res.data),
+            vehiclePrice: res.data.price,
+          });
+        }
+      })
       .catch((err) => {
         console.error(err);
         setError('Veículo não encontrado ou indisponível.');
@@ -149,15 +165,17 @@ export default function VehicleDetailPage() {
               </div>
             ) : null}
 
-            <a
+            <WhatsAppLink
               href={`https://wa.me/5511985614257?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noreferrer"
+              buttonLocation="vehicle_details"
+              vehicleId={vehicle.id}
+              vehicleName={`${vehicle.brand} ${vehicle.model}`}
+              vehiclePrice={vehicle.price}
               className="inline-flex items-center gap-2 rounded-full bg-brothers-green px-6 py-3 font-semibold text-brothers-dark transition hover:brightness-110"
             >
               <Phone className="h-4 w-4" />
               Quero falar sobre este veículo
-            </a>
+            </WhatsAppLink>
           </div>
         </div>
       </div>

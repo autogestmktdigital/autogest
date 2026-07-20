@@ -1,4 +1,5 @@
 import { Mail, MapPin, Phone } from 'lucide-react';
+import { WhatsAppLink } from './whatsapp-link';
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -37,7 +38,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-brothers-green" />
-                <a href="tel:+5511985614257">(11) 98561-4257</a>
+                <WhatsAppLink href="tel:+5511985614257" buttonLocation="footer">(11) 98561-4257</WhatsAppLink>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-brothers-green" />

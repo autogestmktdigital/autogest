@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Fuel, Gauge, Search, SlidersHorizontal } from 'lucide-react';
 import { formatVehicleYear, getImageUrl, getVehicles } from '@/lib/api';
+import { trackViewInventory } from '@/lib/gtm';
+import { WhatsAppLink } from '@/components/site/whatsapp-link';
 import type { Vehicle } from '@/types';
 
 function formatCurrency(value: number) {
@@ -27,11 +29,16 @@ export default function VehiclesPage() {
     fuel: '',
     search: '',
   });
+  const trackedRef = useRef(false);
 
   useEffect(() => {
     getVehicles({ status: 'available' })
       .then((res) => {
         setVehicles(res.data);
+        if (!trackedRef.current) {
+          trackedRef.current = true;
+          trackViewInventory({ vehiclesVisible: res.data.length });
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -221,6 +228,16 @@ export default function VehiclesPage() {
                           </span>
                         </div>
                         {vehicle.plate ? <p className="mt-3 text-sm text-white/60">Placa: {vehicle.plate}</p> : null}
+                        <WhatsAppLink
+                          href={`https://wa.me/5511985614257?text=${encodeURIComponent(`Olá! Vi no site o ${vehicle.brand} ${vehicle.model}${vehicle.version ? ` ${vehicle.version}` : ''} ${formatVehicleYear(vehicle)} e gostaria de mais informações.`)}`}
+                          buttonLocation="vehicle_card"
+                          vehicleId={vehicle.id}
+                          vehicleName={`${vehicle.brand} ${vehicle.model}`}
+                          vehiclePrice={vehicle.price}
+                          className="mt-4 inline-flex items-center gap-2 rounded-full bg-brothers-green px-4 py-2 text-sm font-semibold text-brothers-dark transition hover:brightness-110"
+                        >
+                          Quero falar sobre este veículo
+                        </WhatsAppLink>
                       </div>
                     </Link>
                   ))}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { CheckCircle, ChevronRight, Search, Shield, Star, Truck } from 'lucide-react';
+import { CheckCircle, ChevronRight, Phone, Search, Shield, Star, Truck } from 'lucide-react';
+import { WhatsAppLink } from '@/components/site/whatsapp-link';
 
 const differentials = [
   {
@@ -59,14 +60,13 @@ export default function HomePage() {
                   <Search className="h-5 w-5" />
                   Ver estoque
                 </Link>
-                <a
+                <WhatsAppLink
                   href="https://wa.me/5511985614257"
-                  target="_blank"
-                  rel="noreferrer"
+                  buttonLocation="floating_button"
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-8 py-4 font-semibold text-white transition hover:border-brothers-green hover:text-brothers-green"
                 >
                   Falar com vendedor
-                </a>
+                </WhatsAppLink>
               </div>
             </div>
           </div>

@@ -2,8 +2,9 @@ import type { Vehicle, VehicleDetailResponse, VehicleListResponse } from '@/type
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api';
 
-function parseJsonArray(value?: string | null) {
+function parseJsonArray(value?: string | string[] | null) {
   if (!value) return [];
+  if (Array.isArray(value)) return value;
   try {
     const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? parsed : [];
@@ -20,8 +21,8 @@ function maskPlate(plate?: string | null) {
 }
 
 function parseVehicle(raw: Vehicle & Record<string, unknown>): Vehicle {
-  const parsedFeatures = parseJsonArray(typeof raw.features === 'string' ? raw.features : null);
-  const parsedImages = parseJsonArray(typeof raw.images === 'string' ? raw.images : null);
+  const parsedFeatures = parseJsonArray(typeof raw.features === 'string' ? raw.features : Array.isArray(raw.features) ? raw.features : null);
+  const parsedImages = parseJsonArray(typeof raw.images === 'string' ? raw.images : Array.isArray(raw.images) ? raw.images : null);
 
   return {
     ...raw,
