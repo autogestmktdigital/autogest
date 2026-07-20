@@ -181,7 +181,7 @@ export const vehicleController = {
       // Combinar imagens existentes com novas
       const existingImagesList = existingImages ? JSON.parse(existingImages) : [];
       const allImages = [...existingImagesList, ...newImages];
-      if (allImages.length > 0) data.images = JSON.stringify(allImages);
+      data.images = JSON.stringify(allImages);
       
       if (reportFile) data.reportFile = reportFile;
       if (documentFile) data.documentFile = documentFile;
