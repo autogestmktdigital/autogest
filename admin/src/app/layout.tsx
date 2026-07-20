@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'AutoRevenda - Painel Admin',
-  description: 'Painel administrativo do AutoRevenda Bot',
+  title: 'AutoGest - Painel Admin',
+  description: 'Painel administrativo do AutoGest',
 };
 
 export default function RootLayout({
