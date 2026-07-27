@@ -1,0 +1,672 @@
+{
+  "version": "6",
+  "id": "brothers-multimarcas-atendimento",
+  "name": "Brothers Multimarcas - Atendimento",
+  "events": [
+    {
+      "id": "start",
+      "outgoingEdgeId": "edge-start"
+    }
+  ],
+  "groups": [
+    {
+      "id": "group-boas-vindas",
+      "title": "Boas Vindas",
+      "blocks": [
+        {
+          "id": "block-boas-vindas",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Olá! Bem-vindo à Brothers Multimarcas! 🚗\n\nSou o assistente virtual e vou te ajudar a encontrar seu próximo carro.\n\nComo posso te ajudar hoje?"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "graphCoordinates": { "x": 0, "y": 0 }
+    },
+    {
+      "id": "group-condicao-origem",
+      "title": "Condição de Origem",
+      "blocks": [
+        {
+          "id": "block-condicao",
+          "type": "condition",
+          "items": [
+            {
+              "id": "item-carro-site",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-carro-site",
+                    "variableId": "var-mensagem",
+                    "comparisonOperator": "Contains",
+                    "value": "Vi o"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-carro-site"
+            },
+            {
+              "id": "item-instagram",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-instagram",
+                    "variableId": "var-mensagem",
+                    "comparisonOperator": "Contains",
+                    "value": "Instagram"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-instagram"
+            },
+            {
+              "id": "item-facebook",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-facebook",
+                    "variableId": "var-mensagem",
+                    "comparisonOperator": "Contains",
+                    "value": "Facebook"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-facebook"
+            },
+            {
+              "id": "item-youtube",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-youtube",
+                    "variableId": "var-mensagem",
+                    "comparisonOperator": "Contains",
+                    "value": "YouTube"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-youtube"
+            },
+            {
+              "id": "item-tiktok",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-tiktok",
+                    "variableId": "var-mensagem",
+                    "comparisonOperator": "Contains",
+                    "value": "TikTok"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-tiktok"
+            },
+            {
+              "id": "item-site-geral",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-site",
+                    "variableId": "var-mensagem",
+                    "comparisonOperator": "Contains",
+                    "value": "site"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-site-geral"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 400, "y": 0 }
+    },
+    {
+      "id": "group-carro-site",
+      "title": "Carro do Site",
+      "blocks": [
+        {
+          "id": "block-carro-site",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Oi! Vi que você se interessou por um carro no nosso site! 🚗\n\nQuer saber mais sobre ele ou ver outras opções nessa faixa de preço?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-carro",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-mais-info",
+              "content": "Quero mais informações"
+            },
+            {
+              "id": "btn-outros-carros",
+              "content": "Ver outras opções"
+            },
+            {
+              "id": "btn-falar-vendedor",
+              "content": "Falar com vendedor"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 800, "y": -200 }
+    },
+    {
+      "id": "group-instagram",
+      "title": "Instagram",
+      "blocks": [
+        {
+          "id": "block-instagram",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Oi! Vi que você veio pelo Instagram! 📸\n\nViu algum carro que gostou por lá?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-instagram",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-sim-instagram",
+              "content": "Sim, vi um carro"
+            },
+            {
+              "id": "btn-nao-instagram",
+              "content": "Não, quero ver o estoque"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 800, "y": 0 }
+    },
+    {
+      "id": "group-facebook",
+      "title": "Facebook",
+      "blocks": [
+        {
+          "id": "block-facebook",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Oi! Vi que você veio pelo Facebook! 👍\n\nComo posso te ajudar hoje?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-facebook",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-ver-estoque-fb",
+              "content": "Ver estoque"
+            },
+            {
+              "id": "btn-falar-vendedor-fb",
+              "content": "Falar com vendedor"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 800, "y": 200 }
+    },
+    {
+      "id": "group-youtube",
+      "title": "YouTube",
+      "blocks": [
+        {
+          "id": "block-youtube",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Oi! Vi que você veio pelo YouTube! 🎥\n\nAssistiu nosso vídeo? Gostou de algum carro?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-youtube",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-sim-yt",
+              "content": "Sim, gostei de um"
+            },
+            {
+              "id": "btn-nao-yt",
+              "content": "Quero ver o estoque"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 800, "y": 400 }
+    },
+    {
+      "id": "group-tiktok",
+      "title": "TikTok",
+      "blocks": [
+        {
+          "id": "block-tiktok",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Oi! Vi que você veio pelo TikTok! 🎵\n\nViu algum carro legal por lá?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-tiktok",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-sim-tt",
+              "content": "Sim, vi um carro"
+            },
+            {
+              "id": "btn-nao-tt",
+              "content": "Quero ver o estoque"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 800, "y": 600 }
+    },
+    {
+      "id": "group-site-geral",
+      "title": "Site Geral",
+      "blocks": [
+        {
+          "id": "block-site-geral",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Oi! Bem-vindo ao nosso atendimento! 🚗\n\nComo posso te ajudar?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-site",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-ver-estoque-site",
+              "content": "Ver estoque"
+            },
+            {
+              "id": "btn-falar-vendedor-site",
+              "content": "Falar com vendedor"
+            },
+            {
+              "id": "btn-agendar-visita-site",
+              "content": "Agendar visita"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 800, "y": 800 }
+    },
+    {
+      "id": "group-menu-principal",
+      "title": "Menu Principal",
+      "blocks": [
+        {
+          "id": "block-menu",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-ver-estoque",
+              "content": "Ver estoque de veículos"
+            },
+            {
+              "id": "btn-falar-vendedor",
+              "content": "Falar com um vendedor"
+            },
+            {
+              "id": "btn-agendar-visita",
+              "content": "Agendar uma visita"
+            },
+            {
+              "id": "btn-tirar-duvidas",
+              "content": "Tirar dúvidas"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 400, "y": 400 }
+    },
+    {
+      "id": "group-ver-estoque",
+      "title": "Ver Estoque",
+      "blocks": [
+        {
+          "id": "block-faixa-preco",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Qual sua faixa de preço?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-preco",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-ate-50k",
+              "content": "Até R$ 50.000"
+            },
+            {
+              "id": "btn-50k-100k",
+              "content": "R$ 50.000 a R$ 100.000"
+            },
+            {
+              "id": "btn-acima-100k",
+              "content": "Acima de R$ 100.000"
+            },
+            {
+              "id": "btn-qualquer-preco",
+              "content": "Qualquer preço"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 1200, "y": 0 }
+    },
+    {
+      "id": "group-falar-vendedor",
+      "title": "Falar com Vendedor",
+      "blocks": [
+        {
+          "id": "block-vendedor",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Perfeito! Vou transferir você para um de nossos vendedores.\n\nQual seu nome?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-input-nome",
+          "type": "text input",
+          "options": {
+            "variableId": "var-nome"
+          }
+        },
+        {
+          "id": "block-confirmar-vendedor",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Obrigado {{var-nome}}! Um vendedor vai entrar em contato com você em breve. 🚗"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "graphCoordinates": { "x": 1200, "y": 200 }
+    },
+    {
+      "id": "group-agendar-visita",
+      "title": "Agendar Visita",
+      "blocks": [
+        {
+          "id": "block-agendar",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Ótimo! Vamos agendar sua visita à loja.\n\nQual dia e horário seria melhor para você?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-input-data",
+          "type": "text input",
+          "options": {
+            "variableId": "var-data-visita"
+          }
+        },
+        {
+          "id": "block-confirmar-visita",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Perfeito! Agendamos sua visita para {{var-data-visita}}.\n\nNosso endereço: Rua Exemplo, 123 - São Paulo/SP\n\nTe esperamos! 🚗"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "graphCoordinates": { "x": 1200, "y": 400 }
+    },
+    {
+      "id": "group-tirar-duvidas",
+      "title": "Tirar Dúvidas",
+      "blocks": [
+        {
+          "id": "block-duvidas",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Claro! Qual sua dúvida?\n\nPosso ajudar com:\n• Informações sobre veículos\n• Formas de pagamento\n• Financiamento\n• Troca de carro\n• Documentação"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-input-duvida",
+          "type": "text input",
+          "options": {
+            "variableId": "var-duvida"
+          }
+        }
+      ],
+      "graphCoordinates": { "x": 1200, "y": 600 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-start",
+      "from": {
+        "eventId": "start"
+      },
+      "to": {
+        "groupId": "group-boas-vindas"
+      }
+    },
+    {
+      "id": "edge-boas-vindas",
+      "from": {
+        "blockId": "block-boas-vindas"
+      },
+      "to": {
+        "groupId": "group-condicao-origem"
+      }
+    },
+    {
+      "id": "edge-carro-site",
+      "from": {
+        "blockId": "block-condicao",
+        "itemId": "item-carro-site"
+      },
+      "to": {
+        "groupId": "group-carro-site"
+      }
+    },
+    {
+      "id": "edge-instagram",
+      "from": {
+        "blockId": "block-condicao",
+        "itemId": "item-instagram"
+      },
+      "to": {
+        "groupId": "group-instagram"
+      }
+    },
+    {
+      "id": "edge-facebook",
+      "from": {
+        "blockId": "block-condicao",
+        "itemId": "item-facebook"
+      },
+      "to": {
+        "groupId": "group-facebook"
+      }
+    },
+    {
+      "id": "edge-youtube",
+      "from": {
+        "blockId": "block-condicao",
+        "itemId": "item-youtube"
+      },
+      "to": {
+        "groupId": "group-youtube"
+      }
+    },
+    {
+      "id": "edge-tiktok",
+      "from": {
+        "blockId": "block-condicao",
+        "itemId": "item-tiktok"
+      },
+      "to": {
+        "groupId": "group-tiktok"
+      }
+    },
+    {
+      "id": "edge-site-geral",
+      "from": {
+        "blockId": "block-condicao",
+        "itemId": "item-site-geral"
+      },
+      "to": {
+        "groupId": "group-site-geral"
+      }
+    },
+    {
+      "id": "edge-default",
+      "from": {
+        "blockId": "block-condicao"
+      },
+      "to": {
+        "groupId": "group-menu-principal"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "id": "var-mensagem",
+      "name": "mensagem"
+    },
+    {
+      "id": "var-nome",
+      "name": "nome"
+    },
+    {
+      "id": "var-data-visita",
+      "name": "data_visita"
+    },
+    {
+      "id": "var-duvida",
+      "name": "duvida"
+    }
+  ]
+}
