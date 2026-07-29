@@ -5,7 +5,7 @@ import { conversationService } from '../services/conversation.service';
 import { followUpService } from '../services/followup.service';
 import { openaiService } from '../services/openai.service';
 
-const TYPEBOT_PUBLIC_ID = 'brothers-multimarcas-v-2-8-ow8km46';
+const TYPEBOT_PUBLIC_ID = 'brothers-multimarcas-v-2-9-iknk9xg';
 const TYPEBOT_API_URL = 'https://typebot.co/api/v1';
 
 async function sendWhatsAppMessage(to: string, text: string) {
