@@ -50,9 +50,9 @@ export class VehicleService {
 
     if (filters.search) {
       where.OR = [
-        { brand: { contains: filters.search } },
-        { model: { contains: filters.search } },
-        { description: { contains: filters.search } },
+        { brand: { contains: filters.search, mode: 'insensitive' } },
+        { model: { contains: filters.search, mode: 'insensitive' } },
+        { description: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
 
