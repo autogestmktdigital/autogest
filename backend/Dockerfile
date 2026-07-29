@@ -5,14 +5,14 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-COPY backend/package*.json ./
+COPY package*.json ./
 RUN npm ci
 
-COPY backend/prisma ./prisma/
+COPY prisma ./prisma/
 RUN npx prisma generate
 
-COPY backend/src ./src/
-COPY backend/tsconfig.json ./tsconfig.json
+COPY src ./src/
+COPY tsconfig.json ./tsconfig.json
 RUN npm run build
 
 # Production stage
@@ -22,10 +22,10 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-COPY backend/package*.json ./
+COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY backend/prisma ./prisma/
+COPY prisma ./prisma/
 RUN npx prisma generate
 
 COPY --from=builder /app/dist ./dist
