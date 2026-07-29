@@ -5,6 +5,87 @@ import { conversationService } from '../services/conversation.service';
 import { followUpService } from '../services/followup.service';
 import { openaiService } from '../services/openai.service';
 
+const TYPEBOT_PUBLIC_ID = 'brothers-multimarcas-v-2-8-ow8km46';
+const TYPEBOT_API_URL = 'https://typebot.co/api/v1';
+
+async function sendWhatsAppMessage(to: string, text: string) {
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+
+  if (!phoneNumberId || !accessToken) {
+    console.error('WHATSAPP_PHONE_NUMBER_ID ou WHATSAPP_ACCESS_TOKEN não configurado');
+    return;
+  }
+
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  const body = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'text',
+    text: { preview_url: false, body: text },
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('Erro ao enviar mensagem WhatsApp:', err);
+  }
+}
+
+async function startTypebotChat(prefilledVariables?: Record<string, string>) {
+  const url = `${TYPEBOT_API_URL}/typebots/${TYPEBOT_PUBLIC_ID}/startChat`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prefilledVariables }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Typebot startChat error: ${err}`);
+  }
+
+  return res.json() as Promise<{ sessionId: string; messages: Array<{ type: string; content?: { text?: string }; text?: string }> }>;
+}
+
+async function continueTypebotChat(sessionId: string, message: string) {
+  const url = `${TYPEBOT_API_URL}/sessions/${sessionId}/continueChat`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Typebot continueChat error: ${err}`);
+  }
+
+  return res.json() as Promise<{ messages: Array<{ type: string; content?: { text?: string }; text?: string }> }>;
+}
+
+function extractTypebotTextMessages(
+  messages: Array<{ type: string; content?: { text?: string }; text?: string }>
+): string[] {
+  return messages
+    .filter((m) => m.type === 'text')
+    .map((m) => {
+      if (typeof m.text === 'string') return m.text;
+      if (m.content?.text) return m.content.text;
+      return '';
+    })
+    .filter(Boolean);
+}
+
 export const webhookController = {
   async searchVehicles(req: Request, res: Response, next: NextFunction) {
     try {
@@ -120,7 +201,7 @@ export const webhookController = {
       // Verificação do webhook (GET)
       if (mode === 'subscribe') {
         const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'brothers-multimarcas-verify-token';
-        
+
         if (token === verifyToken) {
           console.log('Webhook do WhatsApp verificado com sucesso');
           return res.status(200).send(challenge);
@@ -133,24 +214,90 @@ export const webhookController = {
       // Recebimento de mensagens (POST)
       if (req.method === 'POST') {
         const body = req.body;
-        
+
         if (body.object === 'whatsapp_business_account') {
           const entry = body.entry?.[0];
           const changes = entry?.changes?.[0];
           const value = changes?.value;
-          
+
           if (value?.messages && value.messages.length > 0) {
             const message = value.messages[0];
-            const from = message.from; // Número do remetente
+            const from = message.from; // Número do remetente (ex: 5511918622241)
             const text = message.text?.body || '';
-            
+
             console.log(`Mensagem recebida de ${from}: ${text}`);
-            
-            // Aqui você pode processar a mensagem e enviar para o Typebot
-            // ou responder diretamente via API do WhatsApp
+
+            // Não processar mensagens do próprio número
+            const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+            if (from === phoneNumberId) {
+              return res.sendStatus(200);
+            }
+
+            try {
+              // 1. Criar ou buscar lead
+              const lead = await leadService.findOrCreate({
+                channel: 'whatsapp',
+                channelUserId: from,
+                phone: from,
+              });
+
+              // 2. Buscar ou criar conversa ativa
+              let conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
+
+              // 3. Salvar mensagem do cliente
+              await conversationService.addMessage(conversation.id, 'customer', text);
+
+              // 4. Se está em handoff humano, não enviar para Typebot
+              if (conversation.isHumanHandoff) {
+                console.log(`Conversa ${conversation.id} em handoff humano. Ignorando Typebot.`);
+                return res.sendStatus(200);
+              }
+
+              // 5. Enviar para Typebot
+              let typebotMessages: string[] = [];
+
+              if (!conversation.typebotSessionId) {
+                // Primeira interação - startChat
+                console.log(`Iniciando Typebot para lead ${lead.id}`);
+                const startResult = await startTypebotChat({
+                  Telefone: from,
+                  Nome: lead.name || '',
+                });
+
+                // Atualizar conversa com sessionId
+                conversation = await conversationService.updateTypebotSession(
+                  conversation.id,
+                  startResult.sessionId
+                );
+
+                typebotMessages = extractTypebotTextMessages(startResult.messages);
+              } else {
+                // Continuar conversa existente
+                console.log(`Continuando Typebot session ${conversation.typebotSessionId}`);
+                const continueResult = await continueTypebotChat(
+                  conversation.typebotSessionId,
+                  text
+                );
+                typebotMessages = extractTypebotTextMessages(continueResult.messages);
+              }
+
+              // 6. Enviar respostas do Typebot de volta ao WhatsApp
+              for (const msg of typebotMessages) {
+                await sendWhatsAppMessage(from, msg);
+                // Salvar mensagem do bot no sistema
+                await conversationService.addMessage(conversation.id, 'agent', msg);
+              }
+            } catch (err: any) {
+              console.error('Erro ao processar mensagem WhatsApp:', err);
+              // Enviar mensagem de erro amigável ao cliente
+              await sendWhatsAppMessage(
+                from,
+                'Desculpe, tive um problema técnico. Um vendedor vai te atender em breve!'
+              );
+            }
           }
         }
-        
+
         return res.sendStatus(200);
       }
 

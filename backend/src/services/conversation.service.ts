@@ -182,6 +182,13 @@ export class ConversationService {
       data: { status: 'closed' },
     });
   }
+
+  async updateTypebotSession(conversationId: number, sessionId: string) {
+    return prisma.conversation.update({
+      where: { id: conversationId },
+      data: { typebotSessionId: sessionId },
+    });
+  }
 }
 
 export const conversationService = new ConversationService();
