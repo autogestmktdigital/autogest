@@ -30,6 +30,6 @@ RUN npx prisma generate
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 3001
+EXPOSE 8080
 
 CMD ["node", "dist/server.js"]
