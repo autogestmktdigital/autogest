@@ -219,7 +219,7 @@ export const webhookController = {
         name: nome || 'Não informado',
         phone: telefone,
         interestNotes,
-        status: status || 'waiting_seller',
+        status: status || 'new',
       });
 
       // Criar uma nova conversa
