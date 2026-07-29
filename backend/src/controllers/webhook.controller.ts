@@ -560,9 +560,6 @@ export const webhookController = {
         kmTroca && !/^v[a-z0-9]{20,}$/i.test(kmTroca) ? `KM da troca: ${kmTroca}` : '',
         `Forma de pagamento: ${cleanValue(formaPagamento)}`,
         dataVisita && !/^v[a-z0-9]{20,}$/i.test(dataVisita) ? `Data da visita: ${dataVisita}` : '',
-        '',
-        '--- Resumo do Atendimento ---',
-        resumoAtendimento && !/^v[a-z0-9]{20,}$/i.test(resumoAtendimento) ? cleanValue(resumoAtendimento) : 'Resumo não disponível',
       ].filter(Boolean).join('\n');
 
       // Criar ou atualizar o lead
