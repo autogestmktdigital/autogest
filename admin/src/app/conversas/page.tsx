@@ -68,6 +68,12 @@ export default function ConversasPage() {
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleType, setScheduleType] = useState('check_interest');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedIdRef = useRef<number | null>(null);
+
+  // Sincronizar ref com state
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   const selectedConversation = conversations.find((c) => c.id === selectedId);
   const canRespond =
@@ -111,7 +117,10 @@ export default function ConversasPage() {
     if (selectedId) {
       fetchMessages(selectedId);
       // Polling automático de mensagens a cada 3 segundos
-      const interval = setInterval(() => fetchMessages(selectedId), 3000);
+      const interval = setInterval(() => {
+        const currentId = selectedIdRef.current;
+        if (currentId) fetchMessages(currentId);
+      }, 3000);
       return () => clearInterval(interval);
     }
   }, [selectedId]);
