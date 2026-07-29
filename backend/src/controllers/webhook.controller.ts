@@ -419,31 +419,41 @@ export const webhookController = {
               let typebotMessages: TypebotMessage[] = [];
               let typebotInput: TypebotInput | undefined;
 
-              if (!conversation.typebotSessionId) {
-                // Primeira interação - startChat
-                console.log(`Iniciando Typebot para lead ${lead.id}`);
-                const startResult = await startTypebotChat({
-                  Telefone: from,
-                  Nome: lead.name || '',
-                });
+              try {
+                if (!conversation.typebotSessionId) {
+                  // Primeira interação - startChat
+                  console.log(`Iniciando Typebot para lead ${lead.id}`);
+                  const startResult = await startTypebotChat({
+                    Telefone: from,
+                    Nome: lead.name || '',
+                  });
 
-                // Atualizar conversa com sessionId
-                conversation = await conversationService.updateTypebotSession(
-                  conversation.id,
-                  startResult.sessionId
-                );
+                  console.log(`Typebot startChat resposta: sessionId=${startResult.sessionId}, messages=${startResult.messages?.length}, input=${startResult.input ? 'sim' : 'nao'}`);
 
-                typebotMessages = startResult.messages;
-                typebotInput = startResult.input;
-              } else {
-                // Continuar conversa existente
-                console.log(`Continuando Typebot session ${conversation.typebotSessionId} com mensagem: ${typebotMessage}`);
-                const continueResult = await continueTypebotChat(
-                  conversation.typebotSessionId,
-                  typebotMessage
-                );
-                typebotMessages = continueResult.messages;
-                typebotInput = continueResult.input;
+                  // Atualizar conversa com sessionId
+                  conversation = await conversationService.updateTypebotSession(
+                    conversation.id,
+                    startResult.sessionId
+                  );
+
+                  typebotMessages = startResult.messages || [];
+                  typebotInput = startResult.input;
+                } else {
+                  // Continuar conversa existente
+                  console.log(`Continuando Typebot session ${conversation.typebotSessionId} com mensagem: ${typebotMessage}`);
+                  const continueResult = await continueTypebotChat(
+                    conversation.typebotSessionId,
+                    typebotMessage
+                  );
+
+                  console.log(`Typebot continueChat resposta: messages=${continueResult.messages?.length}, input=${continueResult.input ? 'sim' : 'nao'}`);
+
+                  typebotMessages = continueResult.messages || [];
+                  typebotInput = continueResult.input;
+                }
+              } catch (typebotErr: any) {
+                console.error('Erro ao chamar Typebot:', typebotErr.message);
+                throw typebotErr;
               }
 
               // 6. Separar mensagens de texto e opções
