@@ -189,37 +189,6 @@ export class ConversationService {
       data: { typebotSessionId: sessionId },
     });
   }
-
-  async updateTypebotOptions(conversationId: number, options: Array<{ id: string; originalText: string }>) {
-    try {
-      return await prisma.conversation.update({
-        where: { id: conversationId },
-        data: { typebotOptions: JSON.stringify(options) },
-      });
-    } catch (err: any) {
-      console.error(`Erro ao salvar opções do Typebot para conversa ${conversationId}:`, err.message);
-      // Não falhar se a coluna não existir ainda
-      return null;
-    }
-  }
-
-  async getTypebotOptions(conversationId: number): Promise<Array<{ id: string; originalText: string }> | null> {
-    try {
-      const conversation = await prisma.conversation.findUnique({
-        where: { id: conversationId },
-        select: { typebotOptions: true },
-      });
-      if (!conversation?.typebotOptions) return null;
-      try {
-        return JSON.parse(conversation.typebotOptions);
-      } catch {
-        return null;
-      }
-    } catch (err: any) {
-      console.error(`Erro ao buscar opções do Typebot para conversa ${conversationId}:`, err.message);
-      return null;
-    }
-  }
 }
 
 export const conversationService = new ConversationService();

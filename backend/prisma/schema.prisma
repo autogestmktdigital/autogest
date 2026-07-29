@@ -88,7 +88,6 @@ model Conversation {
   leadId           Int      @map("lead_id")
   channel          String
   typebotSessionId String?  @map("typebot_session_id")
-  typebotOptions   String?  @map("typebot_options") // JSON com opções do Typebot
   isHumanHandoff   Boolean  @default(false) @map("is_human_handoff")
   status           String   @default("active")
   unreadCount      Int      @default(0) @map("unread_count")
