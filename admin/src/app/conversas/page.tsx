@@ -144,25 +144,25 @@ export default function ConversasPage() {
     }
   }
 
-  async function fetchMessages(convId: number) {
-    setLoadingMessages(true);
+  async function fetchMessages(convId: number, silent = false) {
+    if (!silent) setLoadingMessages(true);
     try {
       const res = await apiClient.get<MessagesResponse>(`/conversations/${convId}/messages?limit=100`);
       setMessages(res.data || []);
     } catch {
-      setMessages([]);
+      if (!silent) setMessages([]);
     } finally {
-      setLoadingMessages(false);
+      if (!silent) setLoadingMessages(false);
     }
   }
 
-  // Polling automático a cada 3 segundos
+  // Polling automático a cada 5 segundos (silencioso)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchConversations();
       const currentId = selectedIdRef.current;
-      if (currentId) fetchMessages(currentId);
-    }, 3000);
+      if (currentId) fetchMessages(currentId, true);
+    }, 5000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
