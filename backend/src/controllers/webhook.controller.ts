@@ -535,8 +535,8 @@ export const webhookController = {
       // Função para limpar valores que são hashes do Typebot
       function cleanValue(val: string | undefined): string {
         if (!val || val.trim() === '') return 'Não informado';
-        // Detecta hash do Typebot: começa com 'v' e tem mais de 15 chars alfanuméricos
-        if (/^v[a-z0-9]{15,}$/i.test(val.trim())) return 'Não informado';
+        // Detecta hash do Typebot: string longa (30+ chars) com caracteres alfanuméricos misturados
+        if (/^v[a-z0-9]{20,}$/i.test(val.trim())) return 'Não informado';
         return val;
       }
 
@@ -555,14 +555,14 @@ export const webhookController = {
         `Faixa de preço: ${cleanValue(faixaPreco)}`,
         `Uso principal: ${cleanValue(usoPrincipal)}`,
         `Possui troca: ${cleanValue(possuiTroca)}`,
-        veiculoTroca && !/^v[a-z0-9]{15,}$/i.test(veiculoTroca) ? `Veículo da troca: ${veiculoTroca}` : '',
-        anoTroca && !/^v[a-z0-9]{15,}$/i.test(anoTroca) ? `Ano da troca: ${anoTroca}` : '',
-        kmTroca && !/^v[a-z0-9]{15,}$/i.test(kmTroca) ? `KM da troca: ${kmTroca}` : '',
+        veiculoTroca && !/^v[a-z0-9]{20,}$/i.test(veiculoTroca) ? `Veículo da troca: ${veiculoTroca}` : '',
+        anoTroca && !/^v[a-z0-9]{20,}$/i.test(anoTroca) ? `Ano da troca: ${anoTroca}` : '',
+        kmTroca && !/^v[a-z0-9]{20,}$/i.test(kmTroca) ? `KM da troca: ${kmTroca}` : '',
         `Forma de pagamento: ${cleanValue(formaPagamento)}`,
-        dataVisita && !/^v[a-z0-9]{15,}$/i.test(dataVisita) ? `Data da visita: ${dataVisita}` : '',
+        dataVisita && !/^v[a-z0-9]{20,}$/i.test(dataVisita) ? `Data da visita: ${dataVisita}` : '',
         '',
         '--- Resumo do Atendimento ---',
-        resumoAtendimento && !/^v[a-z0-9]{15,}$/i.test(resumoAtendimento) ? cleanValue(resumoAtendimento) : 'Resumo não disponível',
+        resumoAtendimento && !/^v[a-z0-9]{20,}$/i.test(resumoAtendimento) ? cleanValue(resumoAtendimento) : 'Resumo não disponível',
       ].filter(Boolean).join('\n');
 
       // Criar ou atualizar o lead
@@ -570,7 +570,7 @@ export const webhookController = {
       const lead = await leadService.findOrCreate({
         channel: 'whatsapp',
         channelUserId: telefoneFinal,
-        name: nome && !/^v[a-z0-9]{15,}$/i.test(nome) ? nome : 'Cliente WhatsApp',
+        name: nome && !/^v[a-z0-9]{20,}$/i.test(nome) ? nome : 'Cliente WhatsApp',
         phone: telefoneFinal,
         interestNotes,
         status: 'new',
