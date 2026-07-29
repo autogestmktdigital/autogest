@@ -477,6 +477,7 @@ export const webhookController = {
               }
             } catch (err: any) {
               console.error('Erro ao processar mensagem WhatsApp:', err);
+              console.error('Stack trace:', err.stack);
               // Enviar mensagem de erro amigável ao cliente
               await sendWhatsAppMessage(
                 from,
