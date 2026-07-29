@@ -568,9 +568,11 @@ export const webhookController = {
 
       return res.json({
         success: true,
-        leadId: lead.id,
-        conversationId: conversation.id,
-        status: lead.status,
+        data: {
+          leadId: lead.id,
+          conversationId: conversation.id,
+          status: lead.status,
+        },
       });
     } catch (error) {
       console.error('Erro no createLead:', error);
