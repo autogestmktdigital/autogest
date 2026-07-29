@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { webhookController } from '../controllers/webhook.controller';
 import { financingController } from '../controllers/financing.controller';
+import { cleanupData } from '../controllers/admin.controller';
 
 const router = Router();
 
@@ -17,5 +18,8 @@ router.post('/whatsapp', webhookController.whatsappWebhook);
 
 // Create lead from Typebot
 router.post('/create-lead', webhookController.createLead);
+
+// Cleanup endpoint (temporário)
+router.post('/cleanup', cleanupData);
 
 export default router;
