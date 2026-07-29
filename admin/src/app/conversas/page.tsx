@@ -108,20 +108,11 @@ export default function ConversasPage() {
 
   useEffect(() => {
     fetchConversations();
-    // Polling automático a cada 3 segundos
-    const interval = setInterval(fetchConversations, 3000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (selectedId) {
       fetchMessages(selectedId);
-      // Polling automático de mensagens a cada 3 segundos
-      const interval = setInterval(() => {
-        const currentId = selectedIdRef.current;
-        if (currentId) fetchMessages(currentId);
-      }, 3000);
-      return () => clearInterval(interval);
     }
   }, [selectedId]);
 
@@ -166,6 +157,17 @@ export default function ConversasPage() {
       setLoadingMessages(false);
     }
   }
+
+  // Polling automático a cada 3 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchConversations();
+      const currentId = selectedIdRef.current;
+      if (currentId) fetchMessages(currentId);
+    }, 3000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSendMessage() {
     if (!newMessage.trim() || !selectedId) return;
