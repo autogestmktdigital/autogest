@@ -15,8 +15,8 @@ export async function cleanupData(req: Request, res: Response) {
     // Deletar na ordem correta para respeitar foreign keys
     const deletedMessages = await prisma.message.deleteMany({});
     const deletedConversations = await prisma.conversation.deleteMany({});
-    const deletedLeads = await prisma.lead.deleteMany({});
     const deletedFollowUps = await prisma.followUp.deleteMany({});
+    const deletedLeads = await prisma.lead.deleteMany({});
 
     return res.json({
       success: true,
