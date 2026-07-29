@@ -195,29 +195,24 @@ function extractTypebotText(messages: TypebotMessage[]): string[] {
 
 function extractTypebotOptions(
   input?: TypebotInput
-): { header: string; body: string; options: Array<{ id: string; title: string }>; originals: Array<{ id: string; originalText: string }> } | null {
+): { header: string; body: string; options: Array<{ id: string; title: string }> } | null {
   if (!input) return null;
   if (input.type !== 'choice input') return null;
 
   const items = input.items || [];
   if (items.length === 0) return null;
 
-  const options = items.map((item, idx) => {
-    const originalText = item.content || item.label || `Opção ${idx + 1}`;
-    return {
-      id: String(idx),
-      title: originalText.substring(0, 20),
-      originalText,
-    };
-  });
+  const options = items.map((item, idx) => ({
+    id: String(idx),
+    title: (item.content || item.label || `Opção ${idx + 1}`).substring(0, 20),
+  }));
 
   if (options.length === 0) return null;
 
   return {
     header: '',
     body: 'Escolha uma opção:',
-    options: options.map((o) => ({ id: o.id, title: o.title })),
-    originals: options.map((o) => ({ id: o.id, originalText: o.originalText })),
+    options,
   };
 }
 
@@ -393,17 +388,11 @@ export const webhookController = {
               // 2. Buscar ou criar conversa ativa
               let conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
 
-              // Se for resposta de lista, buscar o texto original pelo ID no banco
+              // Se for resposta de lista, usar o texto da opção selecionada
               let typebotMessage = text;
-              if (isListReply && conversation.typebotSessionId) {
-                const savedOptions = await conversationService.getTypebotOptions(conversation.id);
-                if (savedOptions) {
-                  const originalOption = savedOptions.find((o) => o.id === listReplyId);
-                  if (originalOption) {
-                    typebotMessage = originalOption.originalText;
-                    console.log(`Mapeando opção ${listReplyId} para texto original: ${typebotMessage}`);
-                  }
-                }
+              if (isListReply && message.interactive?.list_reply?.title) {
+                typebotMessage = message.interactive.list_reply.title;
+                console.log(`Resposta de lista recebida: ${typebotMessage}`);
               }
 
               // 3. Salvar mensagem do cliente
@@ -468,11 +457,6 @@ export const webhookController = {
 
               // 8. Se houver opções, enviar como lista interativa
               if (choiceOptions) {
-                // Salvar mapeamento de opções no banco
-                if (conversation.typebotSessionId) {
-                  await conversationService.updateTypebotOptions(conversation.id, choiceOptions.originals);
-                }
-
                 await sendWhatsAppListMessage(
                   from,
                   choiceOptions.header,
