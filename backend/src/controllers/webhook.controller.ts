@@ -122,7 +122,11 @@ async function startTypebotChat(prefilledVariables?: Record<string, string>) {
     throw new Error(`Typebot startChat error: ${err}`);
   }
 
-  return res.json() as Promise<{ sessionId: string; messages: TypebotMessage[] }>;
+  return res.json() as Promise<{
+    sessionId: string;
+    messages: TypebotMessage[];
+    input?: TypebotInput;
+  }>;
 }
 
 async function continueTypebotChat(sessionId: string, message: string) {
@@ -138,7 +142,10 @@ async function continueTypebotChat(sessionId: string, message: string) {
     throw new Error(`Typebot continueChat error: ${err}`);
   }
 
-  return res.json() as Promise<{ messages: TypebotMessage[] }>;
+  return res.json() as Promise<{
+    messages: TypebotMessage[];
+    input?: TypebotInput;
+  }>;
 }
 
 interface TypebotMessage {
@@ -152,6 +159,15 @@ interface TypebotMessage {
   };
   text?: string;
   options?: Array<{ id?: string; label?: string; content?: string }>;
+}
+
+interface TypebotInput {
+  type: string;
+  items?: Array<{ id?: string; content?: string; label?: string }>;
+  options?: {
+    labels?: { placeholder?: string };
+    variableId?: string;
+  };
 }
 
 function extractTypebotText(messages: TypebotMessage[]): string[] {
@@ -178,28 +194,22 @@ function extractTypebotText(messages: TypebotMessage[]): string[] {
 }
 
 function extractTypebotOptions(
-  messages: TypebotMessage[]
+  input?: TypebotInput
 ): { header: string; body: string; options: Array<{ id: string; title: string; description?: string }> } | null {
-  const choiceMsg = messages.find((m) => m.type === 'choice input' || m.type === 'choice');
-  if (!choiceMsg) return null;
+  if (!input) return null;
+  if (input.type !== 'choice input') return null;
 
-  // Extract the text message before the choice (usually the question)
-  const textMessages = extractTypebotText(messages);
-  const header = '';
-  const body = textMessages[textMessages.length - 1] || 'Escolha uma opção:';
+  const items = input.items || [];
+  if (items.length === 0) return null;
 
-  // Extract options
-  const rawOptions =
-    choiceMsg.options || choiceMsg.content?.options || [];
-
-  const options = rawOptions.map((opt, idx) => ({
-    id: opt.id || String(idx),
-    title: (opt.label || opt.content || `Opção ${idx + 1}`).substring(0, 24),
+  const options = items.map((item, idx) => ({
+    id: item.id || String(idx),
+    title: (item.content || item.label || `Opção ${idx + 1}`).substring(0, 20),
   }));
 
   if (options.length === 0) return null;
 
-  return { header, body, options };
+  return { header: '', body: 'Escolha uma opção:', options };
 }
 
 export const webhookController = {
@@ -380,6 +390,7 @@ export const webhookController = {
 
               // 5. Enviar para Typebot
               let typebotMessages: TypebotMessage[] = [];
+              let typebotInput: TypebotInput | undefined;
 
               if (!conversation.typebotSessionId) {
                 // Primeira interação - startChat
@@ -396,6 +407,7 @@ export const webhookController = {
                 );
 
                 typebotMessages = startResult.messages;
+                typebotInput = startResult.input;
               } else {
                 // Continuar conversa existente
                 console.log(`Continuando Typebot session ${conversation.typebotSessionId}`);
@@ -404,11 +416,12 @@ export const webhookController = {
                   text
                 );
                 typebotMessages = continueResult.messages;
+                typebotInput = continueResult.input;
               }
 
               // 6. Separar mensagens de texto e opções
               const textMessages = extractTypebotText(typebotMessages);
-              const choiceOptions = extractTypebotOptions(typebotMessages);
+              const choiceOptions = extractTypebotOptions(typebotInput);
 
               // 7. Enviar mensagens de texto
               for (const msg of textMessages) {
