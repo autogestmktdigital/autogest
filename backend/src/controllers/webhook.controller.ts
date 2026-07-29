@@ -514,10 +514,11 @@ export const webhookController = {
         resumoAtendimento,
         status,
         channelUserId,
+        from,
       } = req.body;
 
-      // Usar telefone do body, ou channelUserId, ou um valor padrão
-      const telefoneFinal = telefone || channelUserId || '00000000000';
+      // Usar telefone do body, ou from (número do WhatsApp), ou channelUserId, ou um valor padrão
+      const telefoneFinal = telefone || from || channelUserId || '00000000000';
 
       // Montar o resumo completo
       const interestNotes = [
