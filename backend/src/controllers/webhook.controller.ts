@@ -515,14 +515,8 @@ export const webhookController = {
         status,
       } = req.body;
 
-      // Validação básica
-      if (!telefone) {
-        console.log('Erro createLead: telefone não informado. Body:', JSON.stringify(req.body));
-        return res.status(400).json({
-          success: false,
-          error: 'Telefone é obrigatório',
-        });
-      }
+      // Validação básica - telefone não é mais obrigatório
+      const telefoneFinal = telefone || '00000000000';
 
       // Montar o resumo completo
       const interestNotes = [
@@ -554,9 +548,9 @@ export const webhookController = {
 
       const lead = await leadService.findOrCreate({
         channel: 'whatsapp',
-        channelUserId: telefone,
+        channelUserId: telefoneFinal,
         name: nome || 'Não informado',
-        phone: telefone,
+        phone: telefoneFinal,
         interestNotes,
         status: leadStatus,
       });
