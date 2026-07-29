@@ -74,13 +74,35 @@ async function continueTypebotChat(sessionId: string, message: string) {
 }
 
 function extractTypebotTextMessages(
-  messages: Array<{ type: string; content?: { text?: string }; text?: string }>
+  messages: Array<{
+    type: string;
+    content?: {
+      type?: string;
+      text?: string;
+      richText?: Array<{ type: string; children: Array<{ text?: string }> }>;
+    };
+    text?: string;
+  }>
 ): string[] {
   return messages
     .filter((m) => m.type === 'text')
     .map((m) => {
+      // Formato simples (text direto)
       if (typeof m.text === 'string') return m.text;
       if (m.content?.text) return m.content.text;
+
+      // Formato richText (Typebot v6.1+)
+      if (m.content?.richText && Array.isArray(m.content.richText)) {
+        return m.content.richText
+          .map((block) => {
+            if (block.children && Array.isArray(block.children)) {
+              return block.children.map((child) => child.text || '').join('');
+            }
+            return '';
+          })
+          .join('\n');
+      }
+
       return '';
     })
     .filter(Boolean);
