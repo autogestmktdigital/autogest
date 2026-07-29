@@ -552,12 +552,8 @@ export const webhookController = {
         status: 'new',
       });
 
-      // Criar uma nova conversa
-      const conversation = await conversationService.create({
-        leadId: lead.id,
-        channel: 'whatsapp',
-        status: 'active',
-      });
+      // Buscar ou criar conversa ativa (evita duplicar)
+      const conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
 
       console.log('Lead criado com sucesso:', { leadId: lead.id, conversationId: conversation.id });
 
