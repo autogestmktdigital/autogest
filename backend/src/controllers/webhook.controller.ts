@@ -519,6 +519,7 @@ export const webhookController = {
 
       // Usar telefone do body, ou from (número do WhatsApp), ou channelUserId, ou um valor padrão
       const telefoneFinal = telefone || from || channelUserId || '00000000000';
+      console.log('Telefone final usado:', telefoneFinal);
 
       // Montar o resumo completo
       const interestNotes = [
@@ -555,7 +556,7 @@ export const webhookController = {
       // Buscar ou criar conversa ativa (evita duplicar)
       const conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
 
-      console.log('Lead criado com sucesso:', { leadId: lead.id, conversationId: conversation.id });
+      console.log('Lead criado com sucesso:', { leadId: lead.id, conversationId: conversation.id, telefone: telefoneFinal });
 
       return res.json({
         success: true,
