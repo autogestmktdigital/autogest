@@ -29,7 +29,7 @@ export class VehicleService {
 
     if (filters.brand) where.brand = { contains: filters.brand };
     if (filters.model) where.model = { contains: filters.model };
-    if (filters.plate) where.plate = { contains: filters.plate };
+    if (filters.plate) where.plate = { contains: filters.plate, mode: 'insensitive' };
     if (filters.fuel) where.fuel = filters.fuel;
     if (filters.transmission) where.transmission = filters.transmission;
     if (filters.status) {
