@@ -102,11 +102,17 @@ export default function ConversasPage() {
 
   useEffect(() => {
     fetchConversations();
+    // Polling automático a cada 3 segundos
+    const interval = setInterval(fetchConversations, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     if (selectedId) {
       fetchMessages(selectedId);
+      // Polling automático de mensagens a cada 3 segundos
+      const interval = setInterval(() => fetchMessages(selectedId), 3000);
+      return () => clearInterval(interval);
     }
   }, [selectedId]);
 
