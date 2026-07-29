@@ -531,29 +531,37 @@ export const webhookController = {
         from,
       } = req.body;
 
+      // Função para limpar valores que são hashes do Typebot
+      function cleanValue(val: string | undefined): string {
+        if (!val || val.trim() === '') return 'Não informado';
+        // Detecta hash do Typebot: começa com 'v' e tem mais de 15 chars alfanuméricos
+        if (/^v[a-z0-9]{15,}$/i.test(val.trim())) return 'Não informado';
+        return val;
+      }
+
       // Usar telefone do body, ou from (número do WhatsApp), ou channelUserId, ou um valor padrão
       const telefoneFinal = telefone || from || channelUserId || '00000000000';
       console.log('Telefone final usado:', telefoneFinal);
 
       // Montar o resumo completo
       const interestNotes = [
-        `Origem: ${origem || 'Não informada'}`,
-        `Motivo: ${motivoContato || 'Não informado'}`,
-        `Veículo de interesse: ${veiculoInteresse || 'Não informado'}`,
-        `Ano: ${anoVeiculo || 'Não informado'}`,
-        `Preço: ${precoVeiculo || 'Não informado'}`,
-        `Modelo desejado: ${modeloDesejado || 'Não informado'}`,
-        `Faixa de preço: ${faixaPreco || 'Não informada'}`,
-        `Uso principal: ${usoPrincipal || 'Não informado'}`,
-        `Possui troca: ${possuiTroca || 'Não informado'}`,
-        veiculoTroca ? `Veículo da troca: ${veiculoTroca}` : '',
-        anoTroca ? `Ano da troca: ${anoTroca}` : '',
-        kmTroca ? `KM da troca: ${kmTroca}` : '',
-        `Forma de pagamento: ${formaPagamento || 'Não informada'}`,
-        dataVisita ? `Data da visita: ${dataVisita}` : '',
+        `Origem: ${cleanValue(origem)}`,
+        `Motivo: ${cleanValue(motivoContato)}`,
+        `Veículo de interesse: ${cleanValue(veiculoInteresse)}`,
+        `Ano: ${cleanValue(anoVeiculo)}`,
+        `Preço: ${cleanValue(precoVeiculo)}`,
+        `Modelo desejado: ${cleanValue(modeloDesejado)}`,
+        `Faixa de preço: ${cleanValue(faixaPreco)}`,
+        `Uso principal: ${cleanValue(usoPrincipal)}`,
+        `Possui troca: ${cleanValue(possuiTroca)}`,
+        veiculoTroca && !/^v[a-z0-9]{15,}$/i.test(veiculoTroca) ? `Veículo da troca: ${veiculoTroca}` : '',
+        anoTroca && !/^v[a-z0-9]{15,}$/i.test(anoTroca) ? `Ano da troca: ${anoTroca}` : '',
+        kmTroca && !/^v[a-z0-9]{15,}$/i.test(kmTroca) ? `KM da troca: ${kmTroca}` : '',
+        `Forma de pagamento: ${cleanValue(formaPagamento)}`,
+        dataVisita && !/^v[a-z0-9]{15,}$/i.test(dataVisita) ? `Data da visita: ${dataVisita}` : '',
         '',
         '--- Resumo do Atendimento ---',
-        resumoAtendimento || 'Não informado',
+        cleanValue(resumoAtendimento),
       ].filter(Boolean).join('\n');
 
       // Criar ou atualizar o lead
@@ -561,7 +569,7 @@ export const webhookController = {
       const lead = await leadService.findOrCreate({
         channel: 'whatsapp',
         channelUserId: telefoneFinal,
-        name: nome || 'Cliente WhatsApp',
+        name: nome && !/^v[a-z0-9]{15,}$/i.test(nome) ? nome : 'Cliente WhatsApp',
         phone: telefoneFinal,
         interestNotes,
         status: 'new',
