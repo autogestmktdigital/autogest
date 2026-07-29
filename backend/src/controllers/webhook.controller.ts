@@ -159,4 +159,84 @@ export const webhookController = {
       next(error);
     }
   },
+
+  async createLead(req: Request, res: Response, next: NextFunction) {
+    try {
+      const {
+        nome,
+        telefone,
+        origem,
+        motivoContato,
+        veiculoInteresse,
+        anoVeiculo,
+        precoVeiculo,
+        modeloDesejado,
+        faixaPreco,
+        usoPrincipal,
+        possuiTroca,
+        veiculoTroca,
+        anoTroca,
+        kmTroca,
+        formaPagamento,
+        dataVisita,
+        resumoAtendimento,
+        status,
+      } = req.body;
+
+      // Validação básica
+      if (!telefone) {
+        return res.status(400).json({
+          success: false,
+          error: 'Telefone é obrigatório',
+        });
+      }
+
+      // Montar o resumo completo
+      const interestNotes = [
+        `Origem: ${origem || 'Não informada'}`,
+        `Motivo: ${motivoContato || 'Não informado'}`,
+        `Veículo de interesse: ${veiculoInteresse || 'Não informado'}`,
+        `Ano: ${anoVeiculo || 'Não informado'}`,
+        `Preço: ${precoVeiculo || 'Não informado'}`,
+        `Modelo desejado: ${modeloDesejado || 'Não informado'}`,
+        `Faixa de preço: ${faixaPreco || 'Não informada'}`,
+        `Uso principal: ${usoPrincipal || 'Não informado'}`,
+        `Possui troca: ${possuiTroca || 'Não informado'}`,
+        veiculoTroca ? `Veículo da troca: ${veiculoTroca}` : '',
+        anoTroca ? `Ano da troca: ${anoTroca}` : '',
+        kmTroca ? `KM da troca: ${kmTroca}` : '',
+        `Forma de pagamento: ${formaPagamento || 'Não informada'}`,
+        dataVisita ? `Data da visita: ${dataVisita}` : '',
+        '',
+        '--- Resumo do Atendimento ---',
+        resumoAtendimento || 'Não informado',
+      ].filter(Boolean).join('\n');
+
+      // Criar ou atualizar o lead
+      const lead = await leadService.findOrCreate({
+        channel: 'whatsapp',
+        channelUserId: telefone,
+        name: nome || 'Não informado',
+        phone: telefone,
+        interestNotes,
+        status: status || 'waiting_seller',
+      });
+
+      // Criar uma nova conversa
+      const conversation = await conversationService.create({
+        leadId: lead.id,
+        channel: 'whatsapp',
+        status: 'active',
+      });
+
+      return res.json({
+        success: true,
+        leadId: lead.id,
+        conversationId: conversation.id,
+        status: lead.status,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

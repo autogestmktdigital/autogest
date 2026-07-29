@@ -84,6 +84,8 @@ export class LeadService {
     channelUserId: string;
     name?: string;
     phone?: string;
+    interestNotes?: string;
+    status?: string;
   }) {
     let lead = await prisma.lead.findUnique({
       where: {
@@ -101,7 +103,19 @@ export class LeadService {
           channelUserId: data.channelUserId,
           name: data.name,
           phone: data.phone,
-          status: 'bot',
+          interestNotes: data.interestNotes,
+          status: data.status || 'bot',
+        },
+      });
+    } else {
+      // Atualizar lead existente com novas informações
+      lead = await prisma.lead.update({
+        where: { id: lead.id },
+        data: {
+          name: data.name || lead.name,
+          phone: data.phone || lead.phone,
+          interestNotes: data.interestNotes || lead.interestNotes,
+          status: data.status || lead.status,
         },
       });
     }

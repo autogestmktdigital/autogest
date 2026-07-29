@@ -3,6 +3,22 @@ import { AppError } from '../utils/AppError';
 import type { Channel, ConversationStatus, MessageRole } from '../types';
 
 export class ConversationService {
+  async create(data: {
+    leadId: number;
+    channel: Channel;
+    status?: ConversationStatus;
+    typebotSessionId?: string;
+  }) {
+    return prisma.conversation.create({
+      data: {
+        leadId: data.leadId,
+        channel: data.channel,
+        status: data.status || 'active',
+        typebotSessionId: data.typebotSessionId,
+      },
+    });
+  }
+
   async findOrCreateForLead(leadId: number, channel: Channel) {
     let conversation = await prisma.conversation.findFirst({
       where: {

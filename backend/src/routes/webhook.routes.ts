@@ -15,4 +15,7 @@ router.post('/simulate-financing', financingController.quickSimulate);
 router.get('/whatsapp', webhookController.whatsappWebhook);
 router.post('/whatsapp', webhookController.whatsappWebhook);
 
+// Create lead from Typebot
+router.post('/create-lead', webhookController.createLead);
+
 export default router;
