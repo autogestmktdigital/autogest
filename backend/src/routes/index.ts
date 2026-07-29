@@ -6,7 +6,6 @@ import conversationRoutes from './conversation.routes';
 import financingRoutes from './financing.routes';
 import webhookRoutes from './webhook.routes';
 import followUpRoutes from './followup.routes';
-import adminRoutes from './admin.routes';
 
 const router = Router();
 
@@ -17,6 +16,5 @@ router.use('/conversations', conversationRoutes);
 router.use('/financing', financingRoutes);
 router.use('/webhook', webhookRoutes);
 router.use('/follow-ups', followUpRoutes);
-router.use('/admin', adminRoutes);
 
 export default router;
