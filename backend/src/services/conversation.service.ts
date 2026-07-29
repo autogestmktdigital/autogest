@@ -34,6 +34,9 @@ export class ConversationService {
       conversation = await prisma.conversation.create({
         data: { leadId, channel, status: 'active' },
       });
+      console.log(`[findOrCreateForLead] Nova conversa criada: ${conversation.id} para lead ${leadId}`);
+    } else {
+      console.log(`[findOrCreateForLead] Conversa existente encontrada: ${conversation.id} para lead ${leadId}`);
     }
 
     return { conversation, isNew };
