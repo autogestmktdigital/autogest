@@ -546,13 +546,19 @@ export const webhookController = {
       ].filter(Boolean).join('\n');
 
       // Criar ou atualizar o lead
+      // Converter status do Typebot para status do sistema
+      let leadStatus = status || 'new';
+      if (leadStatus === 'Aguardando vendedor') {
+        leadStatus = 'new';
+      }
+
       const lead = await leadService.findOrCreate({
         channel: 'whatsapp',
         channelUserId: telefone,
         name: nome || 'Não informado',
         phone: telefone,
         interestNotes,
-        status: status || 'new',
+        status: leadStatus,
       });
 
       // Criar uma nova conversa
