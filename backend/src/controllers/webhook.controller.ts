@@ -517,7 +517,7 @@ export const webhookController = {
 
       // Validação básica
       if (!telefone) {
-        console.log('Erro createLead: telefone não informado');
+        console.log('Erro createLead: telefone não informado. Body:', JSON.stringify(req.body));
         return res.status(400).json({
           success: false,
           error: 'Telefone é obrigatório',
