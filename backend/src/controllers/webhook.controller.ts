@@ -41,6 +41,74 @@ async function sendWhatsAppMessage(to: string, text: string) {
   }
 }
 
+async function sendWhatsAppListMessage(
+  to: string,
+  headerText: string,
+  bodyText: string,
+  options: Array<{ id: string; title: string; description?: string }>
+) {
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
+
+  if (!phoneNumberId || !accessToken) {
+    console.error('WHATSAPP_PHONE_NUMBER_ID ou WHATSAPP_ACCESS_TOKEN não configurado');
+    return;
+  }
+
+  const url = `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`;
+  
+  // Build interactive message
+  const interactive: any = {
+    type: 'list',
+    body: {
+      text: bodyText,
+    },
+    action: {
+      button: 'Ver opções',
+      sections: [
+        {
+          title: 'Opções',
+          rows: options.map((opt, idx) => ({
+            id: opt.id || String(idx),
+            title: opt.title.substring(0, 24),
+            description: opt.description?.substring(0, 72),
+          })),
+        },
+      ],
+    },
+  };
+
+  // Only add header if it's not empty
+  if (headerText && headerText.trim()) {
+    interactive.header = {
+      type: 'text',
+      text: headerText.substring(0, 60),
+    };
+  }
+
+  const body = {
+    messaging_product: 'whatsapp',
+    recipient_type: 'individual',
+    to,
+    type: 'interactive',
+    interactive,
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('Erro ao enviar lista WhatsApp:', err);
+  }
+}
+
 async function startTypebotChat(prefilledVariables?: Record<string, string>) {
   const url = `${TYPEBOT_API_URL}/typebots/${TYPEBOT_PUBLIC_ID}/startChat`;
   const res = await fetch(url, {
@@ -54,7 +122,7 @@ async function startTypebotChat(prefilledVariables?: Record<string, string>) {
     throw new Error(`Typebot startChat error: ${err}`);
   }
 
-  return res.json() as Promise<{ sessionId: string; messages: Array<{ type: string; content?: { text?: string }; text?: string }> }>;
+  return res.json() as Promise<{ sessionId: string; messages: TypebotMessage[] }>;
 }
 
 async function continueTypebotChat(sessionId: string, message: string) {
@@ -70,28 +138,29 @@ async function continueTypebotChat(sessionId: string, message: string) {
     throw new Error(`Typebot continueChat error: ${err}`);
   }
 
-  return res.json() as Promise<{ messages: Array<{ type: string; content?: { text?: string }; text?: string }> }>;
+  return res.json() as Promise<{ messages: TypebotMessage[] }>;
 }
 
-function extractTypebotTextMessages(
-  messages: Array<{
-    type: string;
-    content?: {
-      type?: string;
-      text?: string;
-      richText?: Array<{ type: string; children: Array<{ text?: string }> }>;
-    };
+interface TypebotMessage {
+  type: string;
+  content?: {
+    type?: string;
     text?: string;
-  }>
-): string[] {
+    richText?: Array<{ type: string; children: Array<{ text?: string }> }>;
+    options?: Array<{ id?: string; label?: string; content?: string }>;
+    buttonLabel?: string;
+  };
+  text?: string;
+  options?: Array<{ id?: string; label?: string; content?: string }>;
+}
+
+function extractTypebotText(messages: TypebotMessage[]): string[] {
   return messages
     .filter((m) => m.type === 'text')
     .map((m) => {
-      // Formato simples (text direto)
       if (typeof m.text === 'string') return m.text;
       if (m.content?.text) return m.content.text;
 
-      // Formato richText (Typebot v6.1+)
       if (m.content?.richText && Array.isArray(m.content.richText)) {
         return m.content.richText
           .map((block) => {
@@ -106,6 +175,31 @@ function extractTypebotTextMessages(
       return '';
     })
     .filter(Boolean);
+}
+
+function extractTypebotOptions(
+  messages: TypebotMessage[]
+): { header: string; body: string; options: Array<{ id: string; title: string; description?: string }> } | null {
+  const choiceMsg = messages.find((m) => m.type === 'choice input' || m.type === 'choice');
+  if (!choiceMsg) return null;
+
+  // Extract the text message before the choice (usually the question)
+  const textMessages = extractTypebotText(messages);
+  const header = '';
+  const body = textMessages[textMessages.length - 1] || 'Escolha uma opção:';
+
+  // Extract options
+  const rawOptions =
+    choiceMsg.options || choiceMsg.content?.options || [];
+
+  const options = rawOptions.map((opt, idx) => ({
+    id: opt.id || String(idx),
+    title: (opt.label || opt.content || `Opção ${idx + 1}`).substring(0, 24),
+  }));
+
+  if (options.length === 0) return null;
+
+  return { header, body, options };
 }
 
 export const webhookController = {
@@ -245,7 +339,16 @@ export const webhookController = {
           if (value?.messages && value.messages.length > 0) {
             const message = value.messages[0];
             const from = message.from; // Número do remetente (ex: 5511918622241)
-            const text = message.text?.body || '';
+            
+            // Extrair texto da mensagem (texto normal OU resposta de lista interativa)
+            let text = '';
+            if (message.text?.body) {
+              text = message.text.body;
+            } else if (message.interactive?.list_reply?.title) {
+              text = message.interactive.list_reply.title;
+            } else if (message.interactive?.button_reply?.title) {
+              text = message.interactive.button_reply.title;
+            }
 
             console.log(`Mensagem recebida de ${from}: ${text}`);
 
@@ -276,7 +379,7 @@ export const webhookController = {
               }
 
               // 5. Enviar para Typebot
-              let typebotMessages: string[] = [];
+              let typebotMessages: TypebotMessage[] = [];
 
               if (!conversation.typebotSessionId) {
                 // Primeira interação - startChat
@@ -292,7 +395,7 @@ export const webhookController = {
                   startResult.sessionId
                 );
 
-                typebotMessages = extractTypebotTextMessages(startResult.messages);
+                typebotMessages = startResult.messages;
               } else {
                 // Continuar conversa existente
                 console.log(`Continuando Typebot session ${conversation.typebotSessionId}`);
@@ -300,14 +403,32 @@ export const webhookController = {
                   conversation.typebotSessionId,
                   text
                 );
-                typebotMessages = extractTypebotTextMessages(continueResult.messages);
+                typebotMessages = continueResult.messages;
               }
 
-              // 6. Enviar respostas do Typebot de volta ao WhatsApp
-              for (const msg of typebotMessages) {
+              // 6. Separar mensagens de texto e opções
+              const textMessages = extractTypebotText(typebotMessages);
+              const choiceOptions = extractTypebotOptions(typebotMessages);
+
+              // 7. Enviar mensagens de texto
+              for (const msg of textMessages) {
                 await sendWhatsAppMessage(from, msg);
-                // Salvar mensagem do bot no sistema
                 await conversationService.addMessage(conversation.id, 'agent', msg);
+              }
+
+              // 8. Se houver opções, enviar como lista interativa
+              if (choiceOptions) {
+                await sendWhatsAppListMessage(
+                  from,
+                  choiceOptions.header,
+                  choiceOptions.body,
+                  choiceOptions.options
+                );
+                await conversationService.addMessage(
+                  conversation.id,
+                  'agent',
+                  `[Lista de opções] ${choiceOptions.options.map((o) => o.title).join(', ')}`
+                );
               }
             } catch (err: any) {
               console.error('Erro ao processar mensagem WhatsApp:', err);
