@@ -149,8 +149,6 @@ export default function ConversasPage() {
     try {
       const res = await apiClient.get<MessagesResponse>(`/conversations/${convId}/messages?limit=100`);
       setMessages(res.data || []);
-      // Atualizar lista de conversas para remover badge de não lidas
-      fetchConversations();
     } catch {
       setMessages([]);
     } finally {
