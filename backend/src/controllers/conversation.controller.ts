@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { conversationService } from '../services/conversation.service';
+import { sendWhatsAppText } from '../services/whatsapp.service';
+import { prisma } from '../config';
 
 export const conversationController = {
   async getActiveConversations(_req: Request, res: Response, next: NextFunction) {
@@ -43,6 +45,24 @@ export const conversationController = {
       const { role, content, mediaUrl } = req.body;
 
       const message = await conversationService.addMessage(id, role, content, mediaUrl);
+
+      // Se for mensagem do vendedor (agente) e o canal for WhatsApp, enviar para o cliente
+      if (role === 'agent' || role === 'seller') {
+        const conversation = await prisma.conversation.findUnique({
+          where: { id },
+          include: { lead: { select: { phone: true, channel: true } } },
+        });
+
+        if (conversation?.lead?.channel === 'whatsapp' && conversation.lead.phone) {
+          try {
+            await sendWhatsAppText(conversation.lead.phone, content);
+            console.log(`Mensagem enviada para WhatsApp ${conversation.lead.phone}: ${content}`);
+          } catch (err: any) {
+            console.error('Erro ao enviar mensagem WhatsApp:', err.message);
+            // Não falhar a requisição se o envio WhatsApp der erro
+          }
+        }
+      }
 
       return res.status(201).json({ success: true, data: message });
     } catch (error) {
