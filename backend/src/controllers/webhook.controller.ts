@@ -513,10 +513,11 @@ export const webhookController = {
         dataVisita,
         resumoAtendimento,
         status,
+        channelUserId,
       } = req.body;
 
-      // Validação básica - telefone não é mais obrigatório
-      const telefoneFinal = telefone || '00000000000';
+      // Usar telefone do body, ou channelUserId, ou um valor padrão
+      const telefoneFinal = telefone || channelUserId || '00000000000';
 
       // Montar o resumo completo
       const interestNotes = [
