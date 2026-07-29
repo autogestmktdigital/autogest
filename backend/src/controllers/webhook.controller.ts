@@ -8,9 +8,6 @@ import { openaiService } from '../services/openai.service';
 const TYPEBOT_PUBLIC_ID = 'brothers-multimarcas-v-2-9-iknk9xg';
 const TYPEBOT_API_URL = 'https://typebot.co/api/v1';
 
-// Armazena o mapeamento de opções do Typebot por sessão
-const typebotOptionsMap = new Map<string, Array<{ id: string; title: string; originalText: string }>>();
-
 async function sendWhatsAppMessage(to: string, text: string) {
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -396,10 +393,10 @@ export const webhookController = {
               // 2. Buscar ou criar conversa ativa
               let conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
 
-              // Se for resposta de lista, buscar o texto original pelo ID
+              // Se for resposta de lista, buscar o texto original pelo ID no banco
               let typebotMessage = text;
               if (isListReply && conversation.typebotSessionId) {
-                const savedOptions = typebotOptionsMap.get(conversation.typebotSessionId);
+                const savedOptions = await conversationService.getTypebotOptions(conversation.id);
                 if (savedOptions) {
                   const originalOption = savedOptions.find((o) => o.id === listReplyId);
                   if (originalOption) {
@@ -461,9 +458,9 @@ export const webhookController = {
 
               // 8. Se houver opções, enviar como lista interativa
               if (choiceOptions) {
-                // Salvar mapeamento de opções para esta sessão
+                // Salvar mapeamento de opções no banco
                 if (conversation.typebotSessionId) {
-                  typebotOptionsMap.set(conversation.typebotSessionId, choiceOptions.originals);
+                  await conversationService.updateTypebotOptions(conversation.id, choiceOptions.originals);
                 }
 
                 await sendWhatsAppListMessage(
