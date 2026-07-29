@@ -11,4 +11,8 @@ router.post('/register-lead', webhookController.registerLead);
 router.post('/handoff', webhookController.handoff);
 router.post('/simulate-financing', financingController.quickSimulate);
 
+// WhatsApp Business API webhook
+router.get('/whatsapp', webhookController.whatsappWebhook);
+router.post('/whatsapp', webhookController.whatsappWebhook);
+
 export default router;

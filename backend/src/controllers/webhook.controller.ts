@@ -110,4 +110,53 @@ export const webhookController = {
       next(error);
     }
   },
+
+  async whatsappWebhook(req: Request, res: Response, next: NextFunction) {
+    try {
+      const mode = req.query['hub.mode'];
+      const token = req.query['hub.verify_token'];
+      const challenge = req.query['hub.challenge'];
+
+      // Verificação do webhook (GET)
+      if (mode === 'subscribe') {
+        const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'brothers-multimarcas-verify-token';
+        
+        if (token === verifyToken) {
+          console.log('Webhook do WhatsApp verificado com sucesso');
+          return res.status(200).send(challenge);
+        } else {
+          console.error('Token de verificação inválido');
+          return res.sendStatus(403);
+        }
+      }
+
+      // Recebimento de mensagens (POST)
+      if (req.method === 'POST') {
+        const body = req.body;
+        
+        if (body.object === 'whatsapp_business_account') {
+          const entry = body.entry?.[0];
+          const changes = entry?.changes?.[0];
+          const value = changes?.value;
+          
+          if (value?.messages && value.messages.length > 0) {
+            const message = value.messages[0];
+            const from = message.from; // Número do remetente
+            const text = message.text?.body || '';
+            
+            console.log(`Mensagem recebida de ${from}: ${text}`);
+            
+            // Aqui você pode processar a mensagem e enviar para o Typebot
+            // ou responder diretamente via API do WhatsApp
+          }
+        }
+        
+        return res.sendStatus(200);
+      }
+
+      return res.sendStatus(400);
+    } catch (error) {
+      next(error);
+    }
+  },
 };
