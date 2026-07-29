@@ -147,13 +147,24 @@ export class VehicleService {
   }
 
   async searchForBot(query: string, maxResults: number = 5) {
+    const searchTerm = query.trim();
+    
+    // Se o usuário enviar um número, buscar por ano também
+    const yearQuery = parseInt(searchTerm);
+    const isYear = !isNaN(yearQuery) && searchTerm.length === 4;
+    
     const vehicles = await prisma.vehicle.findMany({
       where: {
         status: 'available',
         OR: [
-          { brand: { contains: query } },
-          { model: { contains: query } },
-          { description: { contains: query } },
+          { brand: { contains: searchTerm, mode: 'insensitive' } },
+          { model: { contains: searchTerm, mode: 'insensitive' } },
+          { description: { contains: searchTerm, mode: 'insensitive' } },
+          { color: { contains: searchTerm, mode: 'insensitive' } },
+          ...(isYear ? [
+            { year: yearQuery },
+            { modelYear: yearQuery }
+          ] : []),
         ],
       },
       take: maxResults,

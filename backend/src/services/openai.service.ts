@@ -106,6 +106,63 @@ Regras:
 
     return response.choices[0]?.message?.content || '';
   }
+  async recommendVehicles(context: {
+    customerPreferences: string;
+    vehicles: Array<{
+      id: number;
+      titulo: string;
+      preco: string;
+      km: string;
+      combustivel: string;
+      cambio: string;
+      cor: string;
+      descricao?: string | null;
+    }>;
+  }): Promise<string> {
+    const client = this.getClient();
+
+    const systemPrompt = `Você é um vendedor especialista da Brothers Multimarcas, uma loja de veículos.
+
+REGRAS ABSOLUTAS:
+- Você deve analisar APENAS os veículos fornecidos na lista abaixo
+- NUNCA invente veículos que não estão na lista
+- NUNCA invente preços, km ou características
+- Se a lista estiver vazia, diga que não temos veículos compatíveis no momento
+- Se nenhum veículo for ideal, sugira os mais próximos ou peça mais informações
+
+FORMATO DA RESPOSTA:
+- Apresente no máximo 3 veículos mais compatíveis
+- Para cada um, cite: modelo, ano, preço, km e por que é uma boa opção
+- Use linguagem de vendedor: entusiasmado mas honesto
+- Máximo 4 parágrafos curtos
+- Use emojis com moderação (máximo 3)`;
+
+    const vehiclesText = context.vehicles
+      .map(
+        (v, i) =>
+          `${i + 1}. ${v.titulo} - ${v.preco} - ${v.km} - ${v.combustivel} - ${v.cambio} - Cor: ${v.cor}${v.descricao ? ` - ${v.descricao}` : ''}`,
+      )
+      .join('\n');
+
+    const userPrompt = `Preferências do cliente: ${context.customerPreferences}
+
+VEÍCULOS DISPONÍVEIS NO ESTOQUE (analise APENAS estes):
+${vehiclesText || 'Nenhum veículo disponível no momento.'}
+
+Com base nas preferências do cliente e nos veículos disponíveis acima, qual sua recomendação?`;
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      max_tokens: 600,
+      temperature: 0.7,
+    });
+
+    return response.choices[0]?.message?.content || 'Desculpe, não consegui analisar as opções no momento.';
+  }
 }
 
 export const openaiService = new OpenAIService();
