@@ -492,6 +492,8 @@ export const webhookController = {
 
   async createLead(req: Request, res: Response, next: NextFunction) {
     try {
+      console.log('Recebendo requisição createLead:', JSON.stringify(req.body));
+      
       const {
         nome,
         telefone,
@@ -515,6 +517,7 @@ export const webhookController = {
 
       // Validação básica
       if (!telefone) {
+        console.log('Erro createLead: telefone não informado');
         return res.status(400).json({
           success: false,
           error: 'Telefone é obrigatório',
@@ -559,6 +562,8 @@ export const webhookController = {
         status: 'active',
       });
 
+      console.log('Lead criado com sucesso:', { leadId: lead.id, conversationId: conversation.id });
+
       return res.json({
         success: true,
         leadId: lead.id,
@@ -566,6 +571,7 @@ export const webhookController = {
         status: lead.status,
       });
     } catch (error) {
+      console.error('Erro no createLead:', error);
       next(error);
     }
   },
