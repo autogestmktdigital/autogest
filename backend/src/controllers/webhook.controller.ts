@@ -413,8 +413,8 @@ export const webhookController = {
                   // Primeira interação - startChat
                   console.log(`Iniciando Typebot para lead ${lead.id}`);
                   const startResult = await startTypebotChat({
-                    Telefone: from,
-                    Nome: lead.name || '',
+                    'Telefone do WhatsApp': from,
+                    'Nome do WhatsApp': lead.name || '',
                   });
 
                   console.log(`Typebot startChat resposta: sessionId=${startResult.sessionId}, messages=${startResult.messages?.length}, input=${startResult.input ? 'sim' : 'nao'}`);
