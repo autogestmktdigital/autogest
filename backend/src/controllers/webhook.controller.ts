@@ -562,7 +562,7 @@ export const webhookController = {
         dataVisita && !/^v[a-z0-9]{15,}$/i.test(dataVisita) ? `Data da visita: ${dataVisita}` : '',
         '',
         '--- Resumo do Atendimento ---',
-        cleanValue(resumoAtendimento),
+        resumoAtendimento && !/^v[a-z0-9]{15,}$/i.test(resumoAtendimento) ? cleanValue(resumoAtendimento) : 'Resumo não disponível',
       ].filter(Boolean).join('\n');
 
       // Criar ou atualizar o lead
