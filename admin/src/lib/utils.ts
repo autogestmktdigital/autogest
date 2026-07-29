@@ -46,6 +46,7 @@ export function formatPhone(phone: string): string {
 export const leadStatusLabels: Record<string, string> = {
   bot: 'Bot',
   new: 'Novo',
+  waiting_seller: 'Aguardando Vendedor',
   in_conversation: 'Em Conversa',
   negotiating: 'Negociando',
   converted: 'Convertido',
@@ -62,6 +63,7 @@ export const leadStatusLabels: Record<string, string> = {
 export const leadStatusColors: Record<string, string> = {
   bot: 'default',
   new: 'info',
+  waiting_seller: 'warning',
   in_conversation: 'warning',
   negotiating: 'warning',
   converted: 'success',
