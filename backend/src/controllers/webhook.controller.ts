@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { prisma } from '../config';
 import { vehicleService } from '../services/vehicle.service';
 import { leadService } from '../services/lead.service';
 import { conversationService } from '../services/conversation.service';
@@ -387,6 +388,17 @@ export const webhookController = {
 
               // 2. Buscar ou criar conversa ativa
               let conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
+
+              // Se for uma conversa NOVA (sem typebotSessionId), resetar lead para iniciar com o bot
+              if (!conversation.typebotSessionId) {
+                await prisma.lead.update({
+                  where: { id: lead.id },
+                  data: {
+                    status: 'bot',
+                    assignedToId: null,
+                  },
+                });
+              }
 
               // Se for resposta de lista, usar o texto da opção selecionada
               let typebotMessage = text;
