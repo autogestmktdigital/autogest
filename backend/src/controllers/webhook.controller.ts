@@ -387,10 +387,10 @@ export const webhookController = {
               });
 
               // 2. Buscar ou criar conversa ativa
-              let conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
+              const { conversation, isNew: isNewConversation } = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
 
-              // Se for uma conversa NOVA (sem typebotSessionId), resetar lead para iniciar com o bot
-              if (!conversation.typebotSessionId) {
+              // Se for uma conversa NOVA (anterior estava encerrada), resetar lead para iniciar com o bot
+              if (isNewConversation) {
                 await prisma.lead.update({
                   where: { id: lead.id },
                   data: {
@@ -566,7 +566,7 @@ export const webhookController = {
       });
 
       // Buscar ou criar conversa ativa (evita duplicar)
-      const conversation = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
+      const { conversation } = await conversationService.findOrCreateForLead(lead.id, 'whatsapp');
 
       console.log('Lead criado com sucesso:', { leadId: lead.id, conversationId: conversation.id, telefone: telefoneFinal });
 

@@ -28,13 +28,15 @@ export class ConversationService {
       },
     });
 
+    const isNew = !conversation;
+
     if (!conversation) {
       conversation = await prisma.conversation.create({
         data: { leadId, channel, status: 'active' },
       });
     }
 
-    return conversation;
+    return { conversation, isNew };
   }
 
   async addMessage(conversationId: number, role: MessageRole, content: string, mediaUrl?: string) {
