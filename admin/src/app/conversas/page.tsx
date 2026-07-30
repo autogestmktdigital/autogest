@@ -373,6 +373,11 @@ export default function ConversasPage() {
                       </Badge>
                     )}
                   </div>
+                  {selectedConversation?.lead?.interestNotes && (
+                    <div className="mt-2 text-xs text-gray-600 bg-gray-50 rounded p-2 whitespace-pre-line max-h-24 overflow-y-auto">
+                      {selectedConversation.lead.interestNotes}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   {selectedConversation?.lead?.status === 'new' && (
