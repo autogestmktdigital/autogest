@@ -111,7 +111,7 @@ export class VehicleService {
     };
   }
 
-  async addExpense(vehicleId: number, data: { type: string; description: string; amount: number; date: string }) {
+  async addExpense(vehicleId: number, data: { type: string; description: string; amount: number; date: Date }) {
     await this.getById(vehicleId);
     return prisma.vehicleExpense.create({
       data: {

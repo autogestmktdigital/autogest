@@ -226,7 +226,7 @@ export const vehicleController = {
         type,
         description,
         amount: Number(amount),
-        date,
+        date: date ? new Date(date) : new Date(),
       });
 
       return res.status(201).json({ success: true, data: expense });
