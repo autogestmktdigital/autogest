@@ -46,6 +46,7 @@ model Vehicle {
   images       String?
   reportFile   String?  @map("report_file")
   documentFile String?  @map("document_file")
+  registrationDate DateTime? @map("registration_date")
   status       String   @default("available")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

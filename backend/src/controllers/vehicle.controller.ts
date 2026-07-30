@@ -113,15 +113,25 @@ export const vehicleController = {
       }
 
       const data = {
-        ...req.body,
+        brand: req.body.brand,
+        model: req.body.model,
+        version: req.body.version || undefined,
+        plate: req.body.plate || undefined,
+        chassis: req.body.chassis || undefined,
+        renavam: req.body.renavam || undefined,
         year: Number(req.body.year),
         modelYear: req.body.modelYear ? Number(req.body.modelYear) : undefined,
         price: Number(req.body.price),
         mileageKm: Number(req.body.mileageKm),
+        fuel: req.body.fuel,
+        color: req.body.color,
+        transmission: req.body.transmission,
+        description: req.body.description || undefined,
+        features: req.body.features || undefined,
         images: images.length > 0 ? JSON.stringify(images) : undefined,
-        features: req.body.features ? req.body.features : undefined,
-        ...(reportFile && { reportFile }),
-        ...(documentFile && { documentFile }),
+        reportFile: reportFile || undefined,
+        documentFile: documentFile || undefined,
+        registrationDate: req.body.registrationDate ? new Date(req.body.registrationDate) : undefined,
       };
 
       const vehicle = await vehicleService.create(data);
