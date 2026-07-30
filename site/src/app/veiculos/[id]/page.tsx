@@ -85,7 +85,7 @@ export default function VehicleDetailPage() {
     automatic: 'Automático',
   };
   const features = typeof vehicle.features === 'string' ? vehicle.features.split(',').map((feature) => feature.trim()).filter(Boolean) : [];
-  const whatsappMessage = encodeURIComponent(`Olá! Vi no site o ${vehicle.brand} ${vehicle.model}${vehicle.version ? ` ${vehicle.version}` : ''} ${formatVehicleYear(vehicle)} e gostaria de mais informações.`);
+  const whatsappMessage = encodeURIComponent(`Olá! Vi no site o ${vehicle.brand} ${vehicle.model}${vehicle.version ? ` ${vehicle.version}` : ''} ${formatVehicleYear(vehicle)} por ${formatPrice(vehicle.price)} e gostaria de mais informações.`);
 
   // JSON-LD para o veículo
   const vehicleJsonLd = {
