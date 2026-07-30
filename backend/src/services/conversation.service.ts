@@ -149,7 +149,7 @@ export class ConversationService {
     const conversations = await prisma.conversation.findMany({
       where: { status: 'active' },
       include: {
-        lead: { select: { id: true, name: true, phone: true, channel: true, status: true, assignedTo: { select: { id: true, name: true } } } },
+        lead: { select: { id: true, name: true, phone: true, channel: true, status: true, interestNotes: true, assignedTo: { select: { id: true, name: true } } } },
         _count: { select: { messages: true } },
       },
       orderBy: [
