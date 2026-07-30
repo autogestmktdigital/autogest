@@ -185,7 +185,7 @@ export default function EditVeiculoPage() {
     async function fetchSellers() {
       try {
         const res = await apiClient.get<{ data: Array<{ id: number; name: string }> }>('/users');
-        setSellers(res.data || []);
+        setSellers(res.data?.data || res.data || []);
       } catch {
         // ignore
       }
