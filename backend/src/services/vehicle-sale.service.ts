@@ -1,9 +1,8 @@
-import { Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 
 export const vehicleSaleService = {
   async create(rawData: Record<string, unknown>) {
-    const data: Prisma.VehicleSaleCreateInput = {
+    const data = {
       vehicleId: Number(rawData.vehicleId),
       salePrice: Number(rawData.salePrice),
       saleDate: new Date(String(rawData.saleDate)),
@@ -26,7 +25,7 @@ export const vehicleSaleService = {
     });
   },
 
-  async update(id: number, data: Prisma.VehicleSaleUpdateInput) {
+  async update(id: number, data: Record<string, unknown>) {
     return prisma.vehicleSale.update({
       where: { id },
       data,
