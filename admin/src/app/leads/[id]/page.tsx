@@ -274,7 +274,7 @@ export default function LeadDetailPage() {
               {lead.interestNotes && (
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Notas de Interesse</p>
-                  <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3">{lead.interestNotes}</p>
+                  <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 whitespace-pre-line">{lead.interestNotes}</p>
                 </div>
               )}
             </CardContent>
