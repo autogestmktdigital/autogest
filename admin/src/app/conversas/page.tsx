@@ -23,6 +23,7 @@ interface Conversation {
     name: string;
     phone: string;
     status?: string;
+    interestNotes?: string;
     assignedTo?: { id: number; name: string };
   };
   pendingFollowUp?: {
