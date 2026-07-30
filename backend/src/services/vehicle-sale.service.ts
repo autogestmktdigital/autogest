@@ -20,9 +20,17 @@ export const vehicleSaleService = {
   },
 
   async getByVehicleId(vehicleId: number) {
-    return prisma.vehicleSale.findFirst({
+    const sale = await prisma.vehicleSale.findFirst({
       where: { vehicleId },
     });
+    if (!sale) return null;
+    // Mapear campos do Prisma para nomes usados pela tela
+    return {
+      ...sale,
+      clientName: sale.buyerName,
+      clientPhone: sale.buyerPhone,
+      clientEmail: sale.buyerEmail,
+    };
   },
 
   async update(id: number, data: Record<string, unknown>) {
