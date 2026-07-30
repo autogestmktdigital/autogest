@@ -184,8 +184,8 @@ export default function EditVeiculoPage() {
   useEffect(() => {
     async function fetchSellers() {
       try {
-        const res = await apiClient.get<Array<{ id: number; name: string }>>('/users');
-        setSellers(res.data || []);
+        const sellers = await apiClient.get<Array<{ id: number; name: string }>>('/users');
+        setSellers(sellers || []);
       } catch {
         // ignore
       }
