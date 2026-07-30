@@ -198,8 +198,8 @@ export default function EditVeiculoPage() {
       if (activeTab !== 'sale') return;
       try {
         const res = await apiClient.get<{ data: any }>(`/vehicles/${id}/sale`);
-        if (res.data) {
-          const s = res.data;
+        if (res.data?.data) {
+          const s = res.data.data;
           setSaleData({
             salePrice: s.salePrice ? String(s.salePrice) : '',
             saleDate: s.saleDate || '',
