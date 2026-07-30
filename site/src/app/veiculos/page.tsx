@@ -229,7 +229,7 @@ export default function VehiclesPage() {
                         </div>
                         {vehicle.plate ? <p className="mt-3 text-sm text-white/60">Placa: {vehicle.plate}</p> : null}
                         <WhatsAppLink
-                          href={`https://wa.me/5511985614257?text=${encodeURIComponent(`Olá! Vi no site o ${vehicle.brand} ${vehicle.model}${vehicle.version ? ` ${vehicle.version}` : ''} ${formatVehicleYear(vehicle)} e gostaria de mais informações.`)}`}
+                          href={`https://wa.me/5511918622241?text=${encodeURIComponent(`Olá! Vi no site o ${vehicle.brand} ${vehicle.model}${vehicle.version ? ` ${vehicle.version}` : ''} ${formatVehicleYear(vehicle)} e gostaria de mais informações.`)}`}
                           buttonLocation="vehicle_card"
                           vehicleId={vehicle.id}
                           vehicleName={`${vehicle.brand} ${vehicle.model}`}

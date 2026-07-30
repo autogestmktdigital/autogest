@@ -43,7 +43,7 @@ export function Header() {
 
         <div className="hidden items-center gap-4 lg:flex">
           <WhatsAppLink
-            href="https://wa.me/5511985614257"
+            href="https://wa.me/5511918622241"
             buttonLocation="header"
             className="flex items-center gap-2 rounded-full bg-brothers-green px-4 py-2 text-sm font-semibold text-brothers-dark transition hover:brightness-110"
           >
@@ -77,7 +77,7 @@ export function Header() {
               Contato
             </Link>
             <WhatsAppLink
-              href="https://wa.me/5511985614257"
+              href="https://wa.me/5511918622241"
               buttonLocation="header"
               className="text-brothers-green"
             >

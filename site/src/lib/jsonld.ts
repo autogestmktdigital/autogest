@@ -68,7 +68,7 @@ export function generateAutoDealerJsonLd(siteUrl: string): JsonLdAutoDealer {
     url: siteUrl,
     logo: `${siteUrl}/logo-oficial.png`,
     image: `${siteUrl}/logo-oficial.png`,
-    telephone: '+55-11-98561-4257',
+    telephone: '+55-11-91862-2241',
     email: 'contato@brothersmultimarcas.com.br',
     address: {
       '@type': 'PostalAddress',

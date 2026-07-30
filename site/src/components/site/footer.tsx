@@ -56,7 +56,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm text-white/70">
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-brothers-green" />
-                <WhatsAppLink href="tel:+5511985614257" buttonLocation="footer">(11) 98561-4257</WhatsAppLink>
+                <WhatsAppLink href="tel:+5511918622241" buttonLocation="footer">(11) 91862-2241</WhatsAppLink>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-brothers-green" />

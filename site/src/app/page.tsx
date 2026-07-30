@@ -67,7 +67,7 @@ export default function HomePage() {
                   Ver estoque
                 </Link>
                 <WhatsAppLink
-                  href="https://wa.me/5511985614257"
+                  href="https://wa.me/5511918622241"
                   buttonLocation="floating_button"
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 px-8 py-4 font-semibold text-white transition hover:border-brothers-green hover:text-brothers-green"
                 >

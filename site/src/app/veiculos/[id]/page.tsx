@@ -204,7 +204,7 @@ export default function VehicleDetailPage() {
               ) : null}
 
               <WhatsAppLink
-                href={`https://wa.me/5511985614257?text=${whatsappMessage}`}
+                href={`https://wa.me/5511918622241?text=${whatsappMessage}`}
                 buttonLocation="vehicle_details"
                 vehicleId={vehicle.id}
                 vehicleName={`${vehicle.brand} ${vehicle.model}`}
