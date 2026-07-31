@@ -4,6 +4,7 @@ import { uploadToCloudinary, hasCloudinaryConfig } from '../middleware/upload';
 
 export const vehicleSaleController = {
   async create(req: Request, res: Response, next: NextFunction) {
+    const data: Record<string, unknown> = { ...req.body };
     try {
       const files = req.files as Express.Multer.File[] | undefined;
       
@@ -20,7 +21,6 @@ export const vehicleSaleController = {
         clientDocuments = documentFiles.map((f) => f.filename);
       }
 
-      const data: Record<string, unknown> = { ...req.body };
       
       // Converter campos numéricos
       if (req.body.salePrice) data.salePrice = Number(req.body.salePrice);
