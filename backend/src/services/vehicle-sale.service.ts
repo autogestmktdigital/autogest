@@ -48,11 +48,21 @@ export const vehicleSaleService = {
     });
     if (!sale) return null;
     // Mapear campos do Prisma para nomes usados pela tela
+    // clientDocuments vem como string JSON do banco, converter para array
+    let clientDocs: string[] = [];
+    if (sale.clientDocuments) {
+      try {
+        clientDocs = JSON.parse(sale.clientDocuments);
+      } catch {
+        clientDocs = [];
+      }
+    }
     return {
       ...sale,
       clientName: sale.buyerName,
       clientPhone: sale.buyerPhone,
       clientEmail: sale.buyerEmail,
+      clientDocuments: clientDocs,
     };
   },
 

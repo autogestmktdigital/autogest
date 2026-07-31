@@ -113,7 +113,6 @@ export default function EditVeiculoPage() {
     sellerName: '',
   });
   const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
-  const [saleLoaded, setSaleLoaded] = useState(false);
   const [clientDocumentsFiles, setClientDocumentsFiles] = useState<File[]>([]);
   const [clientDocumentsPreviews, setClientDocumentsPreviews] = useState<string[]>([]);
   const [reportFile, setReportFile] = useState<File | null>(null);
@@ -197,54 +196,65 @@ export default function EditVeiculoPage() {
 
   useEffect(() => {
     async function fetchSale() {
-      if (activeTab !== 'sale' || saleLoaded) return;
+      if (activeTab !== 'sale') return;
       try {
         const res = await apiClient.get<{ data: any }>(`/vehicles/${id}/sale`);
         if (res.data?.data) {
           const s = res.data.data;
-          setSaleData({
-            salePrice: s.salePrice ? String(s.salePrice) : '',
-            saleDate: s.saleDate || '',
-            clientName: s.clientName || '',
-            clientRg: s.clientRg || '',
-            clientCpfCnpj: s.clientCpfCnpj || '',
-            clientPhone: s.clientPhone || '',
-            clientEmail: s.clientEmail || '',
-            clientAddress: s.clientAddress || '',
-            clientDocuments: s.clientDocuments ? JSON.parse(s.clientDocuments) : [],
-            paymentMethod: s.paymentMethod || 'cash',
-            downPayment: s.downPayment ? String(s.downPayment) : '',
-            financeCompany: s.financeCompany || '',
-            financeDate: s.financeDate || '',
-            financedAmount: s.financedAmount ? String(s.financedAmount) : '',
-            installments: s.installments ? String(s.installments) : '',
-            installmentValue: s.installmentValue ? String(s.installmentValue) : '',
-            hasTradeIn: s.hasTradeIn || false,
-            tradeInBrand: s.tradeInBrand || '',
-            tradeInModel: s.tradeInModel || '',
-            tradeInVersion: s.tradeInVersion || '',
-            tradeInPlate: s.tradeInPlate || '',
-            tradeInYear: s.tradeInYear ? String(s.tradeInYear) : '',
-            tradeInModelYear: s.tradeInModelYear ? String(s.tradeInModelYear) : '',
-            tradeInFuel: s.tradeInFuel || 'flex',
-            tradeInChassis: s.tradeInChassis || '',
-            tradeInRenavam: s.tradeInRenavam || '',
-            tradeInPurchasePrice: s.tradeInPurchasePrice ? String(s.tradeInPurchasePrice) : '',
-            tradeInDebts: s.tradeInDebts ? String(s.tradeInDebts) : '',
-            tradeInDebtsNotes: s.tradeInDebtsNotes || '',
-            tradeInNetValue: s.tradeInNetValue ? String(s.tradeInNetValue) : '',
-            documentationNotes: s.documentationNotes || '',
-            sellerId: s.sellerId ? String(s.sellerId) : '',
-            sellerName: s.sellerName || '',
+          setSaleData((prev) => {
+            // Só preenche campos que ainda estão vazios para não sobrescrever dados digitados
+            const fill = (serverVal: any, currentVal: string) => {
+              if (currentVal !== '' && currentVal !== '0' && currentVal !== 'false') return currentVal;
+              if (serverVal === null || serverVal === undefined) return '';
+              return String(serverVal);
+            };
+            const fillBool = (serverVal: any, currentVal: boolean) => {
+              if (currentVal) return true;
+              return !!serverVal;
+            };
+            return {
+              salePrice: fill(s.salePrice, prev.salePrice),
+              saleDate: fill(s.saleDate, prev.saleDate),
+              clientName: fill(s.clientName, prev.clientName),
+              clientRg: fill(s.clientRg, prev.clientRg),
+              clientCpfCnpj: fill(s.clientCpfCnpj, prev.clientCpfCnpj),
+              clientPhone: fill(s.clientPhone, prev.clientPhone),
+              clientEmail: fill(s.clientEmail, prev.clientEmail),
+              clientAddress: fill(s.clientAddress, prev.clientAddress),
+              clientDocuments: prev.clientDocuments.length > 0 ? prev.clientDocuments : (Array.isArray(s.clientDocuments) ? s.clientDocuments : []),
+              paymentMethod: prev.paymentMethod !== 'cash' ? prev.paymentMethod : (s.paymentMethod || 'cash'),
+              downPayment: fill(s.downPayment, prev.downPayment),
+              financeCompany: fill(s.financeCompany, prev.financeCompany),
+              financeDate: fill(s.financeDate, prev.financeDate),
+              financedAmount: fill(s.financedAmount, prev.financedAmount),
+              installments: fill(s.installments, prev.installments),
+              installmentValue: fill(s.installmentValue, prev.installmentValue),
+              hasTradeIn: fillBool(s.hasTradeIn, prev.hasTradeIn),
+              tradeInBrand: fill(s.tradeInBrand, prev.tradeInBrand),
+              tradeInModel: fill(s.tradeInModel, prev.tradeInModel),
+              tradeInVersion: fill(s.tradeInVersion, prev.tradeInVersion),
+              tradeInPlate: fill(s.tradeInPlate, prev.tradeInPlate),
+              tradeInYear: fill(s.tradeInYear, prev.tradeInYear),
+              tradeInModelYear: fill(s.tradeInModelYear, prev.tradeInModelYear),
+              tradeInFuel: prev.tradeInFuel !== 'flex' ? prev.tradeInFuel : (s.tradeInFuel || 'flex'),
+              tradeInChassis: fill(s.tradeInChassis, prev.tradeInChassis),
+              tradeInRenavam: fill(s.tradeInRenavam, prev.tradeInRenavam),
+              tradeInPurchasePrice: fill(s.tradeInPurchasePrice, prev.tradeInPurchasePrice),
+              tradeInDebts: fill(s.tradeInDebts, prev.tradeInDebts),
+              tradeInDebtsNotes: fill(s.tradeInDebtsNotes, prev.tradeInDebtsNotes),
+              tradeInNetValue: fill(s.tradeInNetValue, prev.tradeInNetValue),
+              documentationNotes: fill(s.documentationNotes, prev.documentationNotes),
+              sellerId: fill(s.sellerId, prev.sellerId),
+              sellerName: fill(s.sellerName, prev.sellerName),
+            };
           });
-          setSaleLoaded(true);
         }
       } catch {
         // ignore
       }
     }
     fetchSale();
-  }, [activeTab, id, saleLoaded]);
+  }, [activeTab, id]);
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
