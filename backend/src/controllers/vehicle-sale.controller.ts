@@ -41,7 +41,15 @@ export const vehicleSaleController = {
 
       const sale = await vehicleSaleService.create(data as any);
       return res.status(201).json({ success: true, data: sale });
-    } catch (error) {
+    } catch (error: any) {
+      // Se der erro de unique constraint (venda já existe), faz update
+      if (error.code === 'P2002' && error.meta?.target?.includes('vehicle_id')) {
+        const existingSale = await vehicleSaleService.getByVehicleId(Number(data.vehicleId));
+        if (existingSale) {
+          const updatedSale = await vehicleSaleService.update(existingSale.id, data);
+          return res.status(200).json({ success: true, data: updatedSale });
+        }
+      }
       next(error);
     }
   },
