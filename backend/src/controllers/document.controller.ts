@@ -137,7 +137,13 @@ async function generateDocument(
     'Vendedor': sale.sellerName || '',
   };
 
-  doc.render(data);
+  try {
+    doc.render(data);
+  } catch (error: any) {
+    console.error('Erro ao renderizar documento:', error);
+    console.error('Dados usados:', JSON.stringify(data, null, 2));
+    throw new Error(`Erro ao gerar documento: ${error.message}`);
+  }
   const buf = doc.getZip().generate({ type: 'nodebuffer' });
   return buf;
 }
