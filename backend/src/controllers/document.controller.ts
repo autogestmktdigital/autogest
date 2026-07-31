@@ -35,12 +35,25 @@ function convertDocxToPdf(docxBuffer: Buffer, outputName: string): Buffer {
   const pdfDir = path.join(tmpDir, 'pdf');
   fs.mkdirSync(pdfDir, { recursive: true });
 
-  execSync(
-    `libreoffice --headless --convert-to pdf --outdir "${pdfDir}" "${docxPath}"`,
-    { timeout: 30000, stdio: 'ignore' }
-  );
+  try {
+    execSync(
+      `libreoffice --headless --convert-to pdf --outdir "${pdfDir}" "${docxPath}"`,
+      { timeout: 30000, stdio: 'pipe' }
+    );
+  } catch (err: any) {
+    console.error('Erro ao converter para PDF:', err.message);
+    console.error('stderr:', err.stderr?.toString());
+    console.error('stdout:', err.stdout?.toString());
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    throw new Error('Falha na conversão para PDF. O LibreOffice pode não estar instalado.');
+  }
 
   const pdfPath = path.join(pdfDir, `${outputName}.pdf`);
+  if (!fs.existsSync(pdfPath)) {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    throw new Error('Arquivo PDF não foi gerado pelo LibreOffice.');
+  }
+
   const pdfBuffer = fs.readFileSync(pdfPath);
 
   // Limpar arquivos temporários

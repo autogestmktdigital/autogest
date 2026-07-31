@@ -1461,7 +1461,7 @@ export default function EditVeiculoPage() {
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       a.href = url;
-                      a.download = `Contrato_Venda_${form.plate || id}.docx`;
+                      a.download = `Contrato_Venda_${form.plate || id}.pdf`;
                       a.click();
                       window.URL.revokeObjectURL(url);
                     } catch {
@@ -1482,7 +1482,7 @@ export default function EditVeiculoPage() {
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       a.href = url;
-                      a.download = `Termo_Garantia_${form.plate || id}.docx`;
+                      a.download = `Termo_Garantia_${form.plate || id}.pdf`;
                       a.click();
                       window.URL.revokeObjectURL(url);
                     } catch {
@@ -1503,7 +1503,7 @@ export default function EditVeiculoPage() {
                       const url = window.URL.createObjectURL(blob);
                       const a = document.createElement('a');
                       a.href = url;
-                      a.download = `Recibo_Venda_${form.plate || id}.docx`;
+                      a.download = `Recibo_Venda_${form.plate || id}.pdf`;
                       a.click();
                       window.URL.revokeObjectURL(url);
                     } catch {
