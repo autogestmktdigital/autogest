@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
 import PizZip from 'pizzip';
 import Docxtemplater from 'docxtemplater';
 import { vehicleSaleService } from '../services/vehicle-sale.service';
@@ -22,6 +23,30 @@ function formatDate(value: string | null | undefined): string {
   const d = new Date(value);
   if (isNaN(d.getTime())) return value;
   return d.toLocaleDateString('pt-BR');
+}
+
+function convertDocxToPdf(docxBuffer: Buffer, outputName: string): Buffer {
+  const tmpDir = path.resolve('/tmp', `doc_${Date.now()}`);
+  fs.mkdirSync(tmpDir, { recursive: true });
+
+  const docxPath = path.join(tmpDir, `${outputName}.docx`);
+  fs.writeFileSync(docxPath, docxBuffer);
+
+  const pdfDir = path.join(tmpDir, 'pdf');
+  fs.mkdirSync(pdfDir, { recursive: true });
+
+  execSync(
+    `libreoffice --headless --convert-to pdf --outdir "${pdfDir}" "${docxPath}"`,
+    { timeout: 30000, stdio: 'ignore' }
+  );
+
+  const pdfPath = path.join(pdfDir, `${outputName}.pdf`);
+  const pdfBuffer = fs.readFileSync(pdfPath);
+
+  // Limpar arquivos temporários
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+
+  return pdfBuffer;
 }
 
 async function generateDocument(
@@ -171,26 +196,27 @@ export const documentController = {
       switch (type) {
         case 'contrato':
           templateName = 'contrato_venda.docx';
-          fileName = `Contrato_Venda_${vehicle.plate || vehicle.id}.docx`;
+          fileName = `Contrato_Venda_${vehicle.plate || vehicle.id}`;
           break;
         case 'recibo':
           templateName = 'recibo_venda.docx';
-          fileName = `Recibo_Venda_${vehicle.plate || vehicle.id}.docx`;
+          fileName = `Recibo_Venda_${vehicle.plate || vehicle.id}`;
           break;
         case 'termo':
           templateName = 'termo_garantia.docx';
-          fileName = `Termo_Garantia_${vehicle.plate || vehicle.id}.docx`;
+          fileName = `Termo_Garantia_${vehicle.plate || vehicle.id}`;
           break;
         default:
           return res.status(400).json({ success: false, message: 'Tipo de documento inválido' });
       }
 
-      const buffer = await generateDocument(templateName, vehicle, sale);
+      const docxBuffer = await generateDocument(templateName, vehicle, sale);
+      const pdfBuffer = convertDocxToPdf(docxBuffer, fileName);
 
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.setHeader('Content-Length', buffer.length);
-      res.send(buffer);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.send(pdfBuffer);
     } catch (error) {
       next(error);
     }
