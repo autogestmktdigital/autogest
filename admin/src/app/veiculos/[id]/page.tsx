@@ -235,9 +235,23 @@ export default function EditVeiculoPage() {
               state = parts[4] || '';
               zipCode = parts[5] || '';
             }
+            // Função para formatar data do backend (ISO) para input date (yyyy-mm-dd)
+            const formatDate = (serverVal: any): string => {
+              if (!serverVal) return '';
+              try {
+                const d = new Date(serverVal);
+                if (isNaN(d.getTime())) return '';
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+              } catch {
+                return '';
+              }
+            };
             return {
               salePrice: fill(s.salePrice, prev.salePrice),
-              saleDate: fill(s.saleDate, prev.saleDate),
+              saleDate: formatDate(s.saleDate) || fill(s.saleDate, prev.saleDate),
               clientName: fill(s.clientName, prev.clientName),
               clientRg: fill(s.clientRg, prev.clientRg),
               clientCpfCnpj: fill(s.clientCpfCnpj, prev.clientCpfCnpj),
@@ -253,7 +267,7 @@ export default function EditVeiculoPage() {
               paymentMethod: prev.paymentMethod !== 'cash' ? prev.paymentMethod : (s.paymentMethod || 'cash'),
               downPayment: fill(s.downPayment, prev.downPayment),
               financeCompany: fill(s.financeCompany, prev.financeCompany),
-              financeDate: fill(s.financeDate, prev.financeDate),
+              financeDate: formatDate(s.financeDate) || fill(s.financeDate, prev.financeDate),
               financedAmount: fill(s.financedAmount, prev.financedAmount),
               installments: fill(s.installments, prev.installments),
               installmentValue: fill(s.installmentValue, prev.installmentValue),
