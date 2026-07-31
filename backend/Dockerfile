@@ -29,6 +29,7 @@ COPY backend/prisma ./prisma/
 RUN npx prisma generate
 
 COPY --from=builder /app/dist ./dist
+COPY backend/templates ./templates
 
 EXPOSE 8080
 
