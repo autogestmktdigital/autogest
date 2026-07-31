@@ -35,6 +35,7 @@ async function generateDocument(
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
+    delimiters: { start: '{{', end: '}}' },
   });
 
   // Parse clientDocuments se for string JSON
