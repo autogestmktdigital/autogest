@@ -70,14 +70,10 @@ async function generateDocument(
   const templatePath = path.join(TEMPLATES_DIR, templateName);
   const content = fs.readFileSync(templatePath, 'binary');
   const zip = new PizZip(content);
-  // Detectar delimitadores usados no template
-  const hasDouble = content.includes('{{');
-  const delimiters = hasDouble ? { start: '{{', end: '}}' } : { start: '{', end: '}' };
-
   const doc = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
-    delimiters,
+    delimiters: { start: '{{', end: '}}' },
   });
 
   // Parse clientDocuments se for string JSON
