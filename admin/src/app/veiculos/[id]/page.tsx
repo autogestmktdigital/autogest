@@ -82,7 +82,12 @@ export default function EditVeiculoPage() {
     clientCpfCnpj: '',
     clientPhone: '',
     clientEmail: '',
-    clientAddress: '',
+    clientStreet: '',
+    clientNumber: '',
+    clientNeighborhood: '',
+    clientCity: '',
+    clientState: '',
+    clientZipCode: '',
     clientDocuments: [] as string[],
     // Seção 3 - Condições da Compra
     paymentMethod: 'cash',
@@ -100,6 +105,7 @@ export default function EditVeiculoPage() {
     tradeInYear: '',
     tradeInModelYear: '',
     tradeInFuel: 'flex',
+    tradeInColor: '',
     tradeInChassis: '',
     tradeInRenavam: '',
     tradeInPurchasePrice: '',
@@ -212,6 +218,23 @@ export default function EditVeiculoPage() {
               if (currentVal) return true;
               return !!serverVal;
             };
+            // Fallback: se o backend retornar clientAddress (registro antigo) e não tiver campos separados,
+            // faz split por vírgula para preencher os novos campos
+            let street = fill(s.clientStreet, prev.clientStreet);
+            let number = fill(s.clientNumber, prev.clientNumber);
+            let neighborhood = fill(s.clientNeighborhood, prev.clientNeighborhood);
+            let city = fill(s.clientCity, prev.clientCity);
+            let state = fill(s.clientState, prev.clientState);
+            let zipCode = fill(s.clientZipCode, prev.clientZipCode);
+            if (!street && s.clientAddress) {
+              const parts = String(s.clientAddress).split(',').map((p: string) => p.trim());
+              street = parts[0] || '';
+              number = parts[1] || '';
+              neighborhood = parts[2] || '';
+              city = parts[3] || '';
+              state = parts[4] || '';
+              zipCode = parts[5] || '';
+            }
             return {
               salePrice: fill(s.salePrice, prev.salePrice),
               saleDate: fill(s.saleDate, prev.saleDate),
@@ -220,7 +243,12 @@ export default function EditVeiculoPage() {
               clientCpfCnpj: fill(s.clientCpfCnpj, prev.clientCpfCnpj),
               clientPhone: fill(s.clientPhone, prev.clientPhone),
               clientEmail: fill(s.clientEmail, prev.clientEmail),
-              clientAddress: fill(s.clientAddress, prev.clientAddress),
+              clientStreet: street,
+              clientNumber: number,
+              clientNeighborhood: neighborhood,
+              clientCity: city,
+              clientState: state,
+              clientZipCode: zipCode,
               clientDocuments: prev.clientDocuments.length > 0 ? prev.clientDocuments : (Array.isArray(s.clientDocuments) ? s.clientDocuments : []),
               paymentMethod: prev.paymentMethod !== 'cash' ? prev.paymentMethod : (s.paymentMethod || 'cash'),
               downPayment: fill(s.downPayment, prev.downPayment),
@@ -237,6 +265,7 @@ export default function EditVeiculoPage() {
               tradeInYear: fill(s.tradeInYear, prev.tradeInYear),
               tradeInModelYear: fill(s.tradeInModelYear, prev.tradeInModelYear),
               tradeInFuel: prev.tradeInFuel !== 'flex' ? prev.tradeInFuel : (s.tradeInFuel || 'flex'),
+              tradeInColor: fill(s.tradeInColor, prev.tradeInColor),
               tradeInChassis: fill(s.tradeInChassis, prev.tradeInChassis),
               tradeInRenavam: fill(s.tradeInRenavam, prev.tradeInRenavam),
               tradeInPurchasePrice: fill(s.tradeInPurchasePrice, prev.tradeInPurchasePrice),
@@ -1032,13 +1061,48 @@ export default function EditVeiculoPage() {
                   placeholder="email@exemplo.com"
                 />
               </div>
-              <Textarea
-                label="Endereço Completo"
-                value={saleData.clientAddress}
-                onChange={(e) => setSaleData((prev) => ({ ...prev, clientAddress: e.target.value }))}
-                placeholder="Rua/Av, Número, Bairro, Cidade, Estado, CEP"
-                rows={2}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Rua / Av"
+                  value={saleData.clientStreet}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientStreet: e.target.value }))}
+                  placeholder="Rua Bento Soares"
+                />
+                <Input
+                  label="Número"
+                  value={saleData.clientNumber}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientNumber: e.target.value }))}
+                  placeholder="60"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Bairro"
+                  value={saleData.clientNeighborhood}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientNeighborhood: e.target.value }))}
+                  placeholder="Jd Virgínia Bianca"
+                />
+                <Input
+                  label="Cidade"
+                  value={saleData.clientCity}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientCity: e.target.value }))}
+                  placeholder="São Paulo"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  label="Estado"
+                  value={saleData.clientState}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientState: e.target.value }))}
+                  placeholder="SP"
+                />
+                <Input
+                  label="CEP"
+                  value={saleData.clientZipCode}
+                  onChange={(e) => setSaleData((prev) => ({ ...prev, clientZipCode: e.target.value }))}
+                  placeholder="00000-000"
+                />
+              </div>
 
               {/* Anexar Documentos */}
               <div className="space-y-2">
@@ -1455,7 +1519,12 @@ export default function EditVeiculoPage() {
                   formData.append('clientCpfCnpj', saleData.clientCpfCnpj);
                   formData.append('clientPhone', saleData.clientPhone);
                   if (saleData.clientEmail) formData.append('clientEmail', saleData.clientEmail);
-                  if (saleData.clientAddress) formData.append('clientAddress', saleData.clientAddress);
+                  if (saleData.clientStreet) formData.append('clientStreet', saleData.clientStreet);
+                  if (saleData.clientNumber) formData.append('clientNumber', saleData.clientNumber);
+                  if (saleData.clientNeighborhood) formData.append('clientNeighborhood', saleData.clientNeighborhood);
+                  if (saleData.clientCity) formData.append('clientCity', saleData.clientCity);
+                  if (saleData.clientState) formData.append('clientState', saleData.clientState);
+                  if (saleData.clientZipCode) formData.append('clientZipCode', saleData.clientZipCode);
                   formData.append('paymentMethod', saleData.paymentMethod);
                   if (saleData.downPayment) formData.append('downPayment', saleData.downPayment.replace(',', '.'));
                   if (saleData.financeCompany) formData.append('financeCompany', saleData.financeCompany);

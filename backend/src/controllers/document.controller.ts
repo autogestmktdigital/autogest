@@ -47,16 +47,17 @@ async function generateDocument(
     }
   }
 
-  // Parse endereço do cliente
+  // Parse endereço do cliente - prioriza campos separados, fallback para split do campo antigo
   let addressParts = {
-    rua: '',
-    numero: '',
-    bairro: '',
-    cidade: '',
-    estado: '',
-    cep: '',
+    rua: sale.clientStreet || '',
+    numero: sale.clientNumber || '',
+    bairro: sale.clientNeighborhood || '',
+    cidade: sale.clientCity || '',
+    estado: sale.clientState || '',
+    cep: sale.clientZipCode || '',
   };
-  if (sale.clientAddress) {
+  // Se não tiver campos separados, tenta fazer split do campo antigo clientAddress
+  if (!addressParts.rua && sale.clientAddress) {
     const parts = sale.clientAddress.split(',').map((p: string) => p.trim());
     addressParts.rua = parts[0] || '';
     addressParts.numero = parts[1] || '';
@@ -118,7 +119,7 @@ async function generateDocument(
     'Modelo Troca': sale.tradeInModel || '',
     'Versão Troca': sale.tradeInVersion || '',
     'Ano Troca': sale.tradeInYear || '',
-    'Cor Troca': sale.tradeInFuel || '', // fallback
+    'Cor Troca': sale.tradeInColor || sale.tradeInFuel || '',
     'Placa Troca': sale.tradeInPlate || '',
     'Renavam Troca': sale.tradeInRenavam || '',
     'Renavan Troca': sale.tradeInRenavam || '',

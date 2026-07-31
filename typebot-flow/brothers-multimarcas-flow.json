@@ -395,11 +395,11 @@
       "graphCoordinates": { "x": 400, "y": 400 }
     },
     {
-      "id": "group-ver-estoque",
-      "title": "Ver Estoque",
+      "id": "group-perguntar-modelo",
+      "title": "Perguntar Modelo",
       "blocks": [
         {
-          "id": "block-faixa-preco",
+          "id": "block-perguntar-modelo",
           "type": "text",
           "content": {
             "richText": [
@@ -407,7 +407,7 @@
                 "type": "p",
                 "children": [
                   {
-                    "text": "Qual sua faixa de preço?"
+                    "text": "Qual modelo ou marca você procura? (Ex: HB20, Onix, SUV, etc.)"
                   }
                 ]
               }
@@ -415,29 +415,127 @@
           }
         },
         {
-          "id": "block-botoes-preco",
-          "type": "choice",
+          "id": "block-input-modelo",
+          "type": "text input",
+          "options": {
+            "variableId": "var-modelo"
+          }
+        }
+      ],
+      "graphCoordinates": { "x": 1200, "y": 0 }
+    },
+    {
+      "id": "group-consulta-estoque",
+      "title": "Consulta Estoque API",
+      "blocks": [
+        {
+          "id": "block-http-estoque",
+          "type": "http request",
+          "options": {
+            "url": "https://autogest-production-404d.up.railway.app/api/webhook/search-vehicles",
+            "method": "POST",
+            "body": "{\"query\":\"{{var-modelo}}\"}",
+            "responseVariableId": "var-resposta-estoque"
+          }
+        },
+        {
+          "id": "block-resultado-estoque",
+          "type": "condition",
           "items": [
             {
-              "id": "btn-ate-50k",
-              "content": "Até R$ 50.000"
+              "id": "item-tem-carros",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-tem-carros",
+                    "variableId": "var-resposta-estoque",
+                    "comparisonOperator": "Contains",
+                    "value": "titulo"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-mostrar-carros"
             },
             {
-              "id": "btn-50k-100k",
-              "content": "R$ 50.000 a R$ 100.000"
-            },
-            {
-              "id": "btn-acima-100k",
-              "content": "Acima de R$ 100.000"
-            },
-            {
-              "id": "btn-qualquer-preco",
-              "content": "Qualquer preço"
+              "id": "item-nao-tem-carros",
+              "content": {
+                "comparisons": [
+                  {
+                    "id": "comp-nao-tem-carros",
+                    "variableId": "var-resposta-estoque",
+                    "comparisonOperator": "Does not contain",
+                    "value": "titulo"
+                  }
+                ],
+                "logicalOperator": "AND"
+              },
+              "outgoingEdgeId": "edge-nao-encontrou"
             }
           ]
         }
       ],
-      "graphCoordinates": { "x": 1200, "y": 0 }
+      "graphCoordinates": { "x": 1600, "y": 0 }
+    },
+    {
+      "id": "group-mostrar-carros",
+      "title": "Mostrar Carros Encontrados",
+      "blocks": [
+        {
+          "id": "block-carros-encontrados",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Encontrei estes veículos no nosso estoque:\n\n{{var-resposta-estoque.data[0].titulo}}\n💰 {{var-resposta-estoque.data[0].preco}}\n📍 {{var-resposta-estoque.data[0].km}}\n\n{{var-resposta-estoque.data[1].titulo}}\n💰 {{var-resposta-estoque.data[1].preco}}\n📍 {{var-resposta-estoque.data[1].km}}\n\nQuer saber mais detalhes de algum deles?"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "graphCoordinates": { "x": 2000, "y": 0 }
+    },
+    {
+      "id": "group-nao-encontrou",
+      "title": "Não Encontrou",
+      "blocks": [
+        {
+          "id": "block-nao-encontrou",
+          "type": "text",
+          "content": {
+            "richText": [
+              {
+                "type": "p",
+                "children": [
+                  {
+                    "text": "Não encontrei veículos com esse termo no momento. 😕\n\nQuer tentar outro modelo ou falar com um vendedor?"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "id": "block-botoes-nao-encontrou",
+          "type": "choice",
+          "items": [
+            {
+              "id": "btn-tentar-novamente",
+              "content": "Tentar outro modelo"
+            },
+            {
+              "id": "btn-falar-vendedor-nao",
+              "content": "Falar com vendedor"
+            }
+          ]
+        }
+      ],
+      "graphCoordinates": { "x": 2000, "y": 200 }
     },
     {
       "id": "group-falar-vendedor",
@@ -642,6 +740,185 @@
       }
     },
     {
+      "id": "edge-ver-estoque-menu",
+      "from": {
+        "blockId": "block-menu",
+        "itemId": "btn-ver-estoque"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-ver-estoque-site",
+      "from": {
+        "blockId": "block-botoes-site",
+        "itemId": "btn-ver-estoque-site"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-ver-estoque-fb",
+      "from": {
+        "blockId": "block-botoes-facebook",
+        "itemId": "btn-ver-estoque-fb"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-nao-instagram",
+      "from": {
+        "blockId": "block-botoes-instagram",
+        "itemId": "btn-nao-instagram"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-nao-yt",
+      "from": {
+        "blockId": "block-botoes-youtube",
+        "itemId": "btn-nao-yt"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-nao-tt",
+      "from": {
+        "blockId": "block-botoes-tiktok",
+        "itemId": "btn-nao-tt"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-outros-carros",
+      "from": {
+        "blockId": "block-botoes-carro",
+        "itemId": "btn-outros-carros"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-modelo-informado",
+      "from": {
+        "blockId": "block-input-modelo"
+      },
+      "to": {
+        "groupId": "group-consulta-estoque"
+      }
+    },
+    {
+      "id": "edge-mostrar-carros",
+      "from": {
+        "blockId": "block-resultado-estoque",
+        "itemId": "item-tem-carros"
+      },
+      "to": {
+        "groupId": "group-mostrar-carros"
+      }
+    },
+    {
+      "id": "edge-nao-encontrou",
+      "from": {
+        "blockId": "block-resultado-estoque",
+        "itemId": "item-nao-tem-carros"
+      },
+      "to": {
+        "groupId": "group-nao-encontrou"
+      }
+    },
+    {
+      "id": "edge-tentar-novamente",
+      "from": {
+        "blockId": "block-botoes-nao-encontrou",
+        "itemId": "btn-tentar-novamente"
+      },
+      "to": {
+        "groupId": "group-perguntar-modelo"
+      }
+    },
+    {
+      "id": "edge-falar-vendedor-nao",
+      "from": {
+        "blockId": "block-botoes-nao-encontrou",
+        "itemId": "btn-falar-vendedor-nao"
+      },
+      "to": {
+        "groupId": "group-falar-vendedor"
+      }
+    },
+    {
+      "id": "edge-falar-vendedor-menu",
+      "from": {
+        "blockId": "block-menu",
+        "itemId": "btn-falar-vendedor"
+      },
+      "to": {
+        "groupId": "group-falar-vendedor"
+      }
+    },
+    {
+      "id": "edge-falar-vendedor-site",
+      "from": {
+        "blockId": "block-botoes-site",
+        "itemId": "btn-falar-vendedor-site"
+      },
+      "to": {
+        "groupId": "group-falar-vendedor"
+      }
+    },
+    {
+      "id": "edge-falar-vendedor-fb",
+      "from": {
+        "blockId": "block-botoes-facebook",
+        "itemId": "btn-falar-vendedor-fb"
+      },
+      "to": {
+        "groupId": "group-falar-vendedor"
+      }
+    },
+    {
+      "id": "edge-agendar-menu",
+      "from": {
+        "blockId": "block-menu",
+        "itemId": "btn-agendar-visita"
+      },
+      "to": {
+        "groupId": "group-agendar-visita"
+      }
+    },
+    {
+      "id": "edge-agendar-site",
+      "from": {
+        "blockId": "block-botoes-site",
+        "itemId": "btn-agendar-visita-site"
+      },
+      "to": {
+        "groupId": "group-agendar-visita"
+      }
+    },
+    {
+      "id": "edge-duvidas-menu",
+      "from": {
+        "blockId": "block-menu",
+        "itemId": "btn-tirar-duvidas"
+      },
+      "to": {
+        "groupId": "group-tirar-duvidas"
+      }
+    },
+    {
       "id": "edge-default",
       "from": {
         "blockId": "block-condicao"
@@ -655,6 +932,14 @@
     {
       "id": "var-mensagem",
       "name": "mensagem"
+    },
+    {
+      "id": "var-modelo",
+      "name": "modelo"
+    },
+    {
+      "id": "var-resposta-estoque",
+      "name": "resposta_estoque"
     },
     {
       "id": "var-nome",
