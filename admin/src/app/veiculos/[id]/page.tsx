@@ -113,6 +113,7 @@ export default function EditVeiculoPage() {
     sellerName: '',
   });
   const [sellers, setSellers] = useState<Array<{ id: number; name: string }>>([]);
+  const [saleLoaded, setSaleLoaded] = useState(false);
   const [clientDocumentsFiles, setClientDocumentsFiles] = useState<File[]>([]);
   const [clientDocumentsPreviews, setClientDocumentsPreviews] = useState<string[]>([]);
   const [reportFile, setReportFile] = useState<File | null>(null);
@@ -196,7 +197,7 @@ export default function EditVeiculoPage() {
 
   useEffect(() => {
     async function fetchSale() {
-      if (activeTab !== 'sale') return;
+      if (activeTab !== 'sale' || saleLoaded) return;
       try {
         const res = await apiClient.get<{ data: any }>(`/vehicles/${id}/sale`);
         if (res.data?.data) {
@@ -236,13 +237,14 @@ export default function EditVeiculoPage() {
             sellerId: s.sellerId ? String(s.sellerId) : '',
             sellerName: s.sellerName || '',
           });
+          setSaleLoaded(true);
         }
       } catch {
         // ignore
       }
     }
     fetchSale();
-  }, [activeTab, id]);
+  }, [activeTab, id, saleLoaded]);
 
   function handleChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const { name, value } = e.target;
