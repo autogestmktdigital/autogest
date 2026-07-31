@@ -204,9 +204,9 @@ export default function EditVeiculoPage() {
     async function fetchSale() {
       if (activeTab !== 'sale') return;
       try {
-        const res = await apiClient.get<{ data: any }>(`/vehicles/${id}/sale`);
-        if (res.data?.data) {
-          const s = res.data.data;
+        const res = await apiClient.get<{ success: boolean; data: any }>(`/vehicles/${id}/sale`);
+        if (res.data) {
+          const s = res.data;
           setSaleData((prev) => {
             // Só preenche campos que ainda estão vazios para não sobrescrever dados digitados
             const fill = (serverVal: any, currentVal: string) => {
