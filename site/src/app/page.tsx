@@ -117,7 +117,7 @@ export default function HomePage() {
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="relative h-80 overflow-hidden rounded-2xl lg:h-[400px]">
               <img
-                src="https://images.unsplash.com/photo-1489824904134-891ab64532f1?q=80&w=1600&auto=format&fit=crop"
+                src="/images/loja-brothers.jpg"
                 alt="Loja Brothers Multimarcas"
                 className="h-full w-full object-cover"
               />
