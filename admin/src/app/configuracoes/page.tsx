@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { Shield, Users, Plug, Plus, CheckCircle, XCircle } from 'lucide-react';
+import { Shield, Users, Plug, Plus, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,7 @@ interface UserItem {
 }
 
 export default function ConfiguracoesPage() {
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: string }>({ name: '', email: '', role: '' });
+  const [currentUser, setCurrentUser] = useState<{ id: number; name: string; email: string; role: string }>({ id: 0, name: '', email: '', role: '' });
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
@@ -35,6 +35,9 @@ export default function ConfiguracoesPage() {
   const [newUserForm, setNewUserForm] = useState({ name: '', email: '', password: '', role: 'seller' });
   const [creatingUser, setCreatingUser] = useState(false);
   const [newUserError, setNewUserError] = useState('');
+
+  // Delete user
+  const [deletingUser, setDeletingUser] = useState<number | null>(null);
 
   useEffect(() => {
     const user = JSON.parse(sessionStorage.getItem('user') || '{}');
@@ -88,6 +91,20 @@ export default function ConfiguracoesPage() {
       setNewUserError(err instanceof Error ? err.message : 'Erro ao criar usuário');
     } finally {
       setCreatingUser(false);
+    }
+  }
+
+  async function handleDeleteUser(userId: number) {
+    if (!confirm('Tem certeza que deseja remover este usuário?')) return;
+
+    setDeletingUser(userId);
+    try {
+      await apiClient.delete(`/auth/users/${userId}`);
+      fetchUsers();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Erro ao remover usuário');
+    } finally {
+      setDeletingUser(null);
     }
   }
 
@@ -204,9 +221,23 @@ export default function ConfiguracoesPage() {
                         <p className="text-xs text-gray-500">{user.email}</p>
                       </div>
                     </div>
-                    <Badge variant={user.role === 'admin' ? 'info' : 'default'}>
-                      {user.role === 'admin' ? 'Admin' : 'Vendedor'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={user.role === 'admin' ? 'info' : 'default'}>
+                        {user.role === 'admin' ? 'Admin' : 'Vendedor'}
+                      </Badge>
+                      {isAdmin && user.id !== currentUser.id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => handleDeleteUser(user.id)}
+                          disabled={deletingUser === user.id}
+                          title="Remover usuário"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

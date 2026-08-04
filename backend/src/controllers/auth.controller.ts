@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { authService } from '../services/auth.service';
+import { AppError } from '../utils/AppError';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -52,6 +53,20 @@ export const authController = {
       const user = await authService.createUser(data);
 
       return res.status(201).json({ success: true, data: user });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = parseInt(req.params.id, 10);
+      if (isNaN(userId)) {
+        throw new AppError('ID do usuário inválido', 400);
+      }
+
+      const result = await authService.deleteUser(userId);
+      return res.json({ success: true, message: result.message });
     } catch (error) {
       next(error);
     }

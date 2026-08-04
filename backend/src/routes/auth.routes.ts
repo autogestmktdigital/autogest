@@ -8,5 +8,6 @@ router.post('/login', authController.login);
 router.post('/change-password', authMiddleware, authController.changePassword);
 router.post('/users', authMiddleware, adminOnly, authController.createUser);
 router.get('/users', authMiddleware, authController.listUsers);
+router.delete('/users/:id', authMiddleware, adminOnly, authController.deleteUser);
 
 export default router;

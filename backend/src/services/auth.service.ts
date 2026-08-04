@@ -78,9 +78,24 @@ export class AuthService {
 
   async listUsers() {
     return prisma.user.findMany({
+      where: { active: true },
       select: { id: true, name: true, email: true, role: true, active: true, createdAt: true },
       orderBy: { name: 'asc' },
     });
+  }
+
+  async deleteUser(userId: number) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new AppError('Usuário não encontrado', 404);
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { active: false },
+    });
+
+    return { message: 'Usuário removido com sucesso' };
   }
 }
 
