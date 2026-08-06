@@ -22,7 +22,7 @@ export interface VehicleFilters {
 export class VehicleService {
   async list(filters: VehicleFilters) {
     const page = filters.page || 1;
-    const limit = filters.limit || 10;
+    const limit = filters.limit || 100;
     const skip = (page - 1) * limit;
 
     const where: Prisma.VehicleWhereInput = {};
