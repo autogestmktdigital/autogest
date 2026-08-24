@@ -1,10 +1,12 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import Script from 'next/script';
 import { GoogleTagManager } from '@next/third-parties/google';
 import { Header } from '@/components/site/header';
 import { Footer } from '@/components/site/footer';
 import { CookieBanner } from '@/components/site/cookie-banner';
 import { isConsentGranted } from '@/lib/consent';
+import { GOOGLE_ADS_ID } from '@/lib/google-ads';
 
 export const metadata: Metadata = {
   title: {
@@ -79,7 +81,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
-  const gtmEnabled = gtmId && (typeof window === 'undefined' || isConsentGranted('analytics') || isConsentGranted('marketing'));
+  const consentAllowed = typeof window === 'undefined' || isConsentGranted('analytics') || isConsentGranted('marketing');
+  const gtmEnabled = gtmId && consentAllowed;
+  const googleAdsEnabled = consentAllowed;
 
   return (
     <html lang="pt-BR">
@@ -88,6 +92,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1">{children}</main>
         <Footer />
         <CookieBanner />
+        {googleAdsEnabled ? (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-ads-gtag-init" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${GOOGLE_ADS_ID}');
+              `}
+            </Script>
+          </>
+        ) : null}
       </body>
       {gtmEnabled ? <GoogleTagManager gtmId={gtmId} /> : null}
     </html>

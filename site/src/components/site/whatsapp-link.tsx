@@ -1,6 +1,7 @@
 'use client';
 
 import { trackWhatsAppClick } from '@/lib/gtm';
+import { trackWhatsAppConversion } from '@/lib/google-ads';
 
 interface WhatsAppLinkProps {
   href: string;
@@ -36,6 +37,13 @@ export function WhatsAppLink({
       vehicleName,
       vehiclePrice,
     });
+
+    // Conversão do Google Ads só é registrada quando o link efetivamente
+    // abre o WhatsApp (wa.me). Outros usos deste componente (ex.: link de
+    // telefone no footer) não devem gerar essa conversão.
+    if (href.startsWith('https://wa.me/')) {
+      trackWhatsAppConversion();
+    }
   }
 
   return (
