@@ -13,6 +13,9 @@ export interface LeadFilters {
   limit?: number;
 }
 
+// Status de encerramento: só aparecem na listagem quando escolhidos no filtro
+const CLOSED_STATUSES = ['converted', 'gave_up', 'invalid', 'no_return', 'bot_no_return'];
+
 export class LeadService {
   async list(filters: LeadFilters) {
     const page = filters.page || 1;
@@ -21,7 +24,12 @@ export class LeadService {
 
     const where: Prisma.LeadWhereInput = {};
 
-    if (filters.status) where.status = filters.status;
+    if (filters.status) {
+      where.status = filters.status;
+    } else {
+      // Por padrão, ocultar leads encerrados (devem ser escolhidos no filtro de status)
+      where.status = { notIn: CLOSED_STATUSES };
+    }
     if (filters.channel) where.channel = filters.channel;
     if (filters.assignedToId) where.assignedToId = filters.assignedToId;
 
