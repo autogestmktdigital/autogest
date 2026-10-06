@@ -3,7 +3,7 @@ FROM node:20-bullseye-slim AS builder
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
+# A base node:20-bullseye-slim já inclui ca-certificates; openssl só é necessário em produção
 
 COPY backend/package*.json ./
 RUN npm ci
@@ -20,7 +20,7 @@ FROM node:20-bullseye-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates libreoffice-writer fonts-liberation fonts-crosextra-carlito fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
+RUN apt-get -o Acquire::Retries=5 update && apt-get -o Acquire::Retries=5 install -y --no-install-recommends openssl ca-certificates libreoffice-writer fonts-liberation fonts-crosextra-carlito fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
 RUN npm ci --omit=dev
