@@ -1,6 +1,7 @@
 import { prisma } from '../config';
 import { AppError } from '../utils/AppError';
 import type { Channel, ConversationStatus, MessageRole } from '../types';
+import cron from 'node-cron';
 
 export class ConversationService {
   async create(data: {
@@ -193,6 +194,77 @@ export class ConversationService {
       where: { id: conversationId },
       data: { typebotSessionId: sessionId },
     });
+  }
+
+  /**
+   * Finaliza automaticamente conversas que estão com o bot (lead status 'bot'),
+   * sem handoff humano e sem resposta do cliente há mais de `hoursThreshold` horas.
+   * A conversa é encerrada (status 'closed') e o lead recebe o status 'bot_no_return'.
+   * Na próxima mensagem do cliente, uma nova conversa será criada e o bot recomeça.
+   */
+  async closeStaleBotConversations(hoursThreshold: number = 24) {
+    const cutoff = new Date(Date.now() - hoursThreshold * 60 * 60 * 1000);
+
+    const candidates = await prisma.conversation.findMany({
+      where: {
+        status: 'active',
+        isHumanHandoff: false,
+        lead: { status: 'bot' },
+      },
+      select: {
+        id: true,
+        leadId: true,
+        startedAt: true,
+        messages: {
+          where: { role: 'customer' },
+          orderBy: { sentAt: 'desc' },
+          take: 1,
+          select: { sentAt: true },
+        },
+      },
+    });
+
+    const closedConversationIds: number[] = [];
+
+    for (const conv of candidates) {
+      const lastCustomerMessageAt = conv.messages[0]?.sentAt || conv.startedAt;
+      if (lastCustomerMessageAt >= cutoff) continue;
+
+      try {
+        await prisma.$transaction([
+          prisma.conversation.update({
+            where: { id: conv.id },
+            data: { status: 'closed' },
+          }),
+          prisma.lead.update({
+            where: { id: conv.leadId },
+            data: { status: 'bot_no_return' },
+          }),
+        ]);
+        closedConversationIds.push(conv.id);
+      } catch (error) {
+        console.error(`[closeStaleBotConversations] Erro ao finalizar conversa ${conv.id}:`, error);
+      }
+    }
+
+    return closedConversationIds;
+  }
+
+  startCronJobs() {
+    // Roda a cada hora (no minuto 15) para finalizar conversas do bot sem retorno do cliente
+    cron.schedule('15 * * * *', async () => {
+      console.log('[CRON] Verificando conversas do bot sem retorno do cliente...');
+      try {
+        const closed = await this.closeStaleBotConversations();
+        if (closed.length > 0) {
+          console.log(`[CRON] ${closed.length} conversa(s) finalizada(s) como "Bot Sem Retorno": ${closed.join(', ')}`);
+        }
+      } catch (error) {
+        console.error('[CRON] Erro ao finalizar conversas sem retorno:', error);
+      }
+    });
+
+    console.log('[CRON] Jobs de conversas iniciados');
   }
 }
 

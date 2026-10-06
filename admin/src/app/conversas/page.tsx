@@ -551,6 +551,7 @@ export default function ConversasPage() {
                         { value: 'gave_up', label: 'Desistiu' },
                         { value: 'invalid', label: 'Indevido' },
                         { value: 'no_return', label: 'Sem Retorno' },
+                        { value: 'bot_no_return', label: 'Bot Sem Retorno' },
                       ].map((option) => (
                         <label
                           key={option.value}

@@ -7,6 +7,7 @@ import cors from 'cors';
 import { env } from './config';
 import { errorHandler } from './middleware';
 import { followUpService } from './services/followup.service';
+import { conversationService } from './services/conversation.service';
 import routes from './routes';
 
 const app = express();
@@ -38,6 +39,7 @@ app.listen(env.PORT, () => {
 
   // Start follow-up cron jobs
   followUpService.startCronJobs();
+  conversationService.startCronJobs();
 });
 
 export default app;
