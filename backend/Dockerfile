@@ -1,9 +1,7 @@
 # Build stage
-FROM node:20-bullseye-slim AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
-
-# A base node:20-bullseye-slim já inclui ca-certificates; openssl só é necessário em produção
 
 COPY backend/package*.json ./
 RUN npm ci
@@ -16,18 +14,15 @@ COPY backend/tsconfig.json ./tsconfig.json
 RUN npm run build
 
 # Production stage
-FROM node:20-bullseye-slim
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-# Produção: aponta o repositório de segurança para o oficial (security.debian.org) para evitar
-# índice desatualizado no CDN do deb.debian.org (404 nos .deb). HTTP é necessário pois a base
-# bullseye-slim não tem certificados de sistema. Se a instalação falhar, refaz o update e tenta de novo.
-RUN sed -i 's|http://deb.debian.org/debian-security|http://security.debian.org/debian-security|g' /etc/apt/sources.list \
-  && (apt-get -o Acquire::Retries=5 update \
-      && apt-get -o Acquire::Retries=5 install -y --no-install-recommends openssl ca-certificates libreoffice-writer fonts-liberation fonts-crosextra-carlito fonts-dejavu-core \
-      || (apt-get -o Acquire::Retries=5 update \
-          && apt-get -o Acquire::Retries=5 install -y --no-install-recommends openssl ca-certificates libreoffice-writer fonts-liberation fonts-crosextra-carlito fonts-dejavu-core)) \
+# Instala dependências do sistema. Bookworm (Debian 12) tem repositórios estáveis,
+# mas mantemos retry para mitigar falhas transitórias de rede.
+RUN apt-get -o Acquire::Retries=5 update \
+  && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
+     openssl ca-certificates libreoffice-writer fonts-liberation fonts-crosextra-carlito fonts-dejavu-core \
   && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
