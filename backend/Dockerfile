@@ -20,7 +20,7 @@ FROM node:20-bullseye-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y openssl ca-certificates libreoffice-writer && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates libreoffice-writer fonts-liberation fonts-crosextra-carlito fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 
 COPY backend/package*.json ./
 RUN npm ci --omit=dev
