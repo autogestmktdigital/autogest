@@ -22,6 +22,7 @@ const envSchema = z.object({
   TYPEBOT_API_URL: z.string().optional(),
   TYPEBOT_API_TOKEN: z.string().optional(),
   TYPEBOT_BOT_ID: z.string().optional(),
+  TYPEBOT_PUBLIC_ID: z.string().optional(),
 
   PORT: z.coerce.number().default(3001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
