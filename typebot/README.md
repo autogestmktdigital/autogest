@@ -2,30 +2,50 @@
 
 Guia para subir o Typebot self-hosted no Railway, substituindo o Typebot cloud pago.
 
-## Serviços necessários
+## Estrutura de deploy
 
-No Railway, crie um **novo projeto** chamado `typebot` (ou use um existente) e adicione:
+```
+typebot-deploy/
+├── builder/
+│   ├── Dockerfile          # FROM baptistearno/typebot-builder:latest
+│   └── railway.json        # Config do serviço builder no Railway
+└── viewer/
+    ├── Dockerfile          # FROM baptistearno/typebot-viewer:latest
+    └── railway.json        # Config do serviço viewer no Railway
+```
 
-| Serviço | Imagem Docker | Função |
-|---------|--------------|--------|
-| `typebot-builder` | `baptistearno/typebot-builder:latest` | Painel de criação de bots |
-| `typebot-viewer` | `baptistearno/typebot-viewer:latest` | Endpoint que executa os bots |
-| `postgres-typebot` | PostgreSQL (Railway addon) | Banco de dados do Typebot |
-| `redis-typebot` | Redis (Railway addon) | Fila/cache do Typebot |
+## Serviços necessários no Railway
+
+| Serviço | Origem | Função |
+|---------|--------|--------|
+| `typebot-builder` | GitHub → `typebot-deploy/builder` | Painel de criação de bots |
+| `typebot-viewer` | GitHub → `typebot-deploy/viewer` | Endpoint que executa os bots |
+| `postgres-typebot` | Railway addon | Banco de dados do Typebot |
+| `redis-typebot` | Railway addon | Fila/cache do Typebot |
 
 ## Passo a passo
 
-### 1. Criar banco PostgreSQL
-1. No projeto Railway, clique em **New** → **Database** → **PostgreSQL**
+### 1. Criar projeto no Railway
+
+1. Acesse https://railway.app
+2. Clique em **"New Project"**
+3. Selecione **"Deploy from GitHub repo"**
+4. Escolha o repositório `autogest`
+5. Nomeie o projeto como `typebot` ou `typebot-self-hosted`
+
+### 2. Adicionar PostgreSQL
+
+1. No projeto, clique em **"New"** → **"Database"** → **"PostgreSQL"**
 2. Nomeie como `postgres-typebot`
-3. Copie a `DATABASE_URL` gerada
+3. Anote a `DATABASE_URL` gerada
 
-### 2. Criar Redis
-1. Clique em **New** → **Database** → **Redis**
+### 3. Adicionar Redis
+
+1. Clique em **"New"** → **"Database"** → **"Redis"**
 2. Nomeie como `redis-typebot`
-3. Copie a `REDIS_URL` gerada
+3. Anote a `REDIS_URL`
 
-### 3. Configurar Cloudflare R2 (storage)
+### 4. Configurar Cloudflare R2 (storage)
 
 1. No Cloudflare, vá em **R2** → **Create bucket**
 2. Nomeie como `typebot-storage`
@@ -36,12 +56,14 @@ No Railway, crie um **novo projeto** chamado `typebot` (ou use um existente) e a
    - `Secret Access Key`
    - `Endpoint` (algo como `https://xxxx.r2.cloudflarestorage.com`)
 
-### 4. Subir o Builder
+### 5. Deploy do Builder via GitHub
 
-1. No Railway, clique em **New** → **Docker Image**
-2. Imagem: `baptistearno/typebot-builder:latest`
-3. Nome: `typebot-builder`
-4. Vá em **Variables** e adicione:
+1. No Railway, clique em **"New"** → **"GitHub Repo"**
+2. Selecione o repositório `autogest`
+3. Em **"Add Root Directory"**, coloque: `/typebot-deploy/builder`
+4. O Railway vai detectar o `Dockerfile` automaticamente
+5. Nomeie o serviço como `typebot-builder`
+6. Vá em **Variables** e adicione:
 
 ```env
 DATABASE_URL=postgresql://... (copie do postgres-typebot)
@@ -69,14 +91,15 @@ S3_SSL=true
 ENCRYPTION_SECRET=sua-chave-de-32-caracteres-aleatoria
 ```
 
-5. Em **Settings** → **Networking**, gere um domínio público (ex: `typebot-builder-production.up.railway.app`)
+7. Em **Settings** → **Networking**, gere um domínio público (ex: `typebot-builder-production.up.railway.app`)
 
-### 5. Subir o Viewer
+### 6. Deploy do Viewer via GitHub
 
-1. No Railway, clique em **New** → **Docker Image**
-2. Imagem: `baptistearno/typebot-viewer:latest`
-3. Nome: `typebot-viewer`
-4. Vá em **Variables** e adicione:
+1. No Railway, clique em **"New"** → **"GitHub Repo"**
+2. Selecione o repositório `autogest`
+3. Em **"Add Root Directory"**, coloque: `/typebot-deploy/viewer`
+4. Nomeie o serviço como `typebot-viewer`
+5. Vá em **Variables** e adicione:
 
 ```env
 DATABASE_URL=postgresql://... (mesmo do builder)
@@ -95,9 +118,9 @@ S3_SSL=true
 ENCRYPTION_SECRET=mesma-chave-do-builder
 ```
 
-5. Em **Settings** → **Networking**, gere um domínio público (ex: `typebot-viewer-production.up.railway.app`)
+6. Em **Settings** → **Networking**, gere um domínio público (ex: `typebot-viewer-production.up.railway.app`)
 
-### 6. Configurar domínios no Cloudflare
+### 7. Configurar domínios no Cloudflare
 
 No Cloudflare DNS, crie:
 
@@ -106,7 +129,7 @@ No Cloudflare DNS, crie:
 | CNAME | `bot` | `typebot-builder-production.up.railway.app` | Ativado |
 | CNAME | `view` | `typebot-viewer-production.up.railway.app` | Ativado |
 
-### 7. Migrar o fluxo do Typebot cloud
+### 8. Migrar o fluxo do Typebot cloud
 
 1. Acesse o Typebot cloud atual
 2. Abra o bot e vá em **Share** → **Export**
@@ -117,7 +140,7 @@ No Cloudflare DNS, crie:
 7. Vá em **Import** e suba o JSON exportado
 8. Publique o bot e anote o **Public ID** (vai ser algo como `meu-bot-abc123`)
 
-### 8. Atualizar o backend
+### 9. Atualizar o backend
 
 No Railway, no serviço do backend, adicione/atualize as variáveis:
 
@@ -139,11 +162,12 @@ O backend já está preparado para usar variáveis de ambiente. Basta configurar
 
 ## Checklist de migração
 
-- [ ] PostgreSQL criado no Railway
-- [ ] Redis criado no Railway
+- [ ] Projeto `typebot` criado no Railway
+- [ ] PostgreSQL criado
+- [ ] Redis criado
 - [ ] Bucket R2 criado e API token gerado
-- [ ] Builder deployado e acessível
-- [ ] Viewer deployado e acessível
+- [ ] Builder deployado via GitHub
+- [ ] Viewer deployado via GitHub
 - [ ] DNS configurado no Cloudflare
 - [ ] Fluxo exportado do Typebot cloud
 - [ ] Fluxo importado no self-hosted e publicado
@@ -153,5 +177,5 @@ O backend já está preparado para usar variáveis de ambiente. Basta configurar
 ## Referências
 
 - [Typebot Self-Hosting Docs](https://docs.typebot.io/self-hosting/get-started)
-- [Railway Docker Deploy](https://docs.railway.app/deploy/deployments)
+- [Railway Deploy from GitHub](https://docs.railway.app/deploy/deployments)
 - [Cloudflare R2](https://developers.cloudflare.com/r2/)
