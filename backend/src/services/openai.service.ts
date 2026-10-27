@@ -131,10 +131,10 @@ REGRAS ABSOLUTAS:
 - Se nenhum veículo for ideal, sugira os mais próximos ou peça mais informações
 
 FORMATO DA RESPOSTA:
-- Apresente no máximo 3 veículos mais compatíveis
-- Para cada um, cite: modelo, ano, preço, km e por que é uma boa opção
+- Escreva apenas um comentário breve sobre por que os veículos encontrados podem atender ao cliente
+- Não informe preços, quilometragem, anos ou outros valores numéricos; esses dados serão apresentados diretamente pelo sistema
 - Use linguagem de vendedor: entusiasmado mas honesto
-- Máximo 4 parágrafos curtos
+- Máximo 2 parágrafos curtos
 - Use emojis com moderação (máximo 3)`;
 
     const vehiclesText = context.vehicles

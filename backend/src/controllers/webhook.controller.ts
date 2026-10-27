@@ -307,16 +307,24 @@ export const webhookController = {
       }
 
       // 3. Enviar para OpenAI formatar a resposta
+      const listedVehicles = vehicles.slice(0, 3);
       const recommendation = await openaiService.recommendVehicles({
         customerPreferences: query,
-        vehicles,
+        vehicles: listedVehicles,
       });
+      const vehicleDetails = listedVehicles
+        .map((vehicle) => `${vehicle.titulo} — ${vehicle.preco} — ${vehicle.km}`)
+        .join('\n');
+      const commentary = /\d|R\$|\b(?:preço|preco|valor|reais|mil|km|quilômetros|quilometros)\b/i.test(recommendation)
+        ? ''
+        : recommendation.trim();
+      const message = `Encontrei no estoque:\n${vehicleDetails}${commentary ? `\n\n${commentary}` : ''}`;
 
       // 4. Retornar mensagem pronta
       return res.json({
         success: true,
         found: true,
-        message: recommendation,
+        message,
       });
     } catch (error) {
       next(error);
